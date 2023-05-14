@@ -1,0 +1,7 @@
+here should the sd card content
+
+menu
+osup
+system
+thinx
+app.elf
