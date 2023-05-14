@@ -15,10 +15,13 @@ gameStarted = false;
 solvedPair = [false,false,false,false];
 
 // debug
-//level = 1;
+//level = 18;
 //levelFinished = false;
 //introStartet = true;
 //gameStarted = true;
+
+// init the display
+var led = [,];
 
 const GameType = {
 	Pair: 0,
@@ -53,17 +56,17 @@ var fieldPos = [
 ];
 
 var helpButton = new Image();
-helpButton.src = "gfx/help.png"
+helpButton.src = "gfx/help.png";
 
 var startButton = new Image();
-startButton.src = "gfx/ok_3.png"
+startButton.src = "gfx/ok_3.png";
 
 var pairsMode = new Image();
-pairsMode.src = "gfx/pairs.png"
+pairsMode.src = "gfx/pairs.png";
 var chainMode = new Image();
-chainMode.src = "gfx/chain.png"
+chainMode.src = "gfx/chain.png";
 var pictureMode = new Image();
-pictureMode.src = "gfx/picture.png"
+pictureMode.src = "gfx/picture.png";
 
 // hold the background
 var backg = new Image();
@@ -734,6 +737,84 @@ function draw() {
 	
 	// draw info and buttons
 	ctx.drawImage(helpButton, 10, 10, 75, 75);
+	
+	// draw led
+	var topX = canvas.width / 2 - 70;
+	var topY = canvas.height / 2 - 56;
+	
+	// background led
+	ctx.beginPath();			
+	ctx.fillStyle = 'white';		
+	ctx.arc(topX + 65, topY + 65, 110, 0, 2 * Math.PI);
+	ctx.fill();
+	ctx.stroke();
+	
+	ctx.beginPath();			
+	ctx.fillStyle = 'black';		
+	ctx.arc(topX + 65, topY + 65, 100, 0, 2 * Math.PI);
+	ctx.fill();
+	ctx.stroke();
+		
+	for (var i = 0; i < 12; i++) {
+		for (var j = 0; j < 12; j++) {
+			
+			if(i==0 && j==0) { continue; }
+			if(i==0 && j==1) { continue; }
+			if(i==0 && j==2) { continue; }
+			if(i==0 && j==3) { continue; }
+			
+			if(i==0 && j==8) { continue; }
+			if(i==0 && j==9) { continue; }
+			if(i==0 && j==10) { continue; }
+			if(i==0 && j==11) { continue; }
+			
+			if(i==1 && j==0) { continue; }
+			if(i==1 && j==1) { continue; }
+
+			if(i==1 && j==10) { continue; }
+			if(i==1 && j==11) { continue; }
+
+			if(i==2 && j==0) { continue; }
+			if(i==2 && j==11) { continue; }
+			
+			if(i==3 && j==0) { continue; }
+			if(i==3 && j==11) { continue; }
+			
+			//
+			
+			if(i==11 && j==0) { continue; }
+			if(i==11 && j==1) { continue; }
+			if(i==11 && j==2) { continue; }
+			if(i==11 && j==3) { continue; }
+			
+			if(i==11 && j==8) { continue; }
+			if(i==11 && j==9) { continue; }
+			if(i==11 && j==10) { continue; }
+			if(i==11 && j==11) { continue; }
+			
+			if(i==10 && j==0) { continue; }
+			if(i==10 && j==1) { continue; }
+
+			if(i==10 && j==10) { continue; }
+			if(i==10 && j==11) { continue; }
+
+			if(i==9 && j==0) { continue; }
+			if(i==9 && j==11) { continue; }
+			
+			if(i==8 && j==0) { continue; }
+			if(i==8 && j==11) { continue; }
+			
+			
+			ctx.beginPath();
+	
+			//ctx.fillStyle = 'orange';
+			ctx.fillStyle = 'grey';
+			
+			ctx.arc(topX + (i * 12), topY + (j * 12), 6, 0, 2 * Math.PI);
+			ctx.fill();
+			ctx.stroke();
+		}
+	}
 	
 	if(!introStartet) {
 		// draw start button
