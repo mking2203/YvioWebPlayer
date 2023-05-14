@@ -1,17 +1,33 @@
 // init playfield
 var canvas = document.getElementById("myCanvas");
 var ctx = canvas.getContext("2d");
+
 // init audio player
 var audioPlayer = document.getElementById('audioPlayer');
 var currentTrackIndex = 0;
 var playlist =[];
 
 // data
-level = 1
-levelFinished = false;
+level = 0;
+levelFinished = true;
+introStartet = false;
+gameStarted = false;
 solvedPair = [false,false,false,false];
 
-const start = Date.now();
+// debug
+level = 1;
+levelFinished = false;
+introStartet = true;
+gameStarted = true;
+
+const GameType = {
+	Pair: 0,
+	Sequence: 1,
+	Picture: 2
+}
+
+// start time
+var start = Date.now();
 
 // holds the stone position
 var stonePos = [
@@ -39,6 +55,9 @@ var fieldPos = [
 var helpButton = new Image();
 helpButton.src = "gfx/help.png"
 
+var startButton = new Image();
+startButton.src = "gfx/ok_3.png"
+
 var pairsMode = new Image();
 pairsMode.src = "gfx/pairs.png"
 var chainMode = new Image();
@@ -63,9 +82,8 @@ var delay = 0;
 canvas.addEventListener('touchstart', function(e) { 
 	
 	//console.log("touchstart")
+	var mousecoords = getTouchPos(canvas, e);
 	if(!levelFinished) {
-
-		var mousecoords = getTouchPos(canvas, e);
 		if (!move)
 		{
 			startDrag(mousecoords.x,mousecoords.y)
@@ -73,18 +91,28 @@ canvas.addEventListener('touchstart', function(e) {
 		}
 	}
 	
+	if(checkPosition(mousecoords.x, mousecoords.y, startButton.x + 50, startButton.y + 50)){
+		playIntro();
+	}
+	
 }, false);
 canvas.addEventListener('mousedown', function(e) { 
 
 	//console.log("mousedown")
-	if(!levelFinished) {
-		var mousecoords = getMousePos(canvas, e);
+	var mousecoords = getMousePos(canvas, e);
+	
+	if(!levelFinished) {	
 		if (!move)
 		{
 			startDrag(mousecoords.x,mousecoords.y)
 			return;
 		}
 	}
+	
+	if(checkPosition(mousecoords.x, mousecoords.y, canvas.width / 2, canvas.height / 2)){
+		playIntro();
+	}
+	
 }, false);
  
 canvas.addEventListener('touchmove', function(e) {
@@ -129,13 +157,15 @@ backg.src = "gfx/thinx.png";
   
 var fields = [];
 var stones = [];
- 
+
+// init the fields 
 for(i=0;i<8;i++){
 	var img = new Image();
 	img.src = "gfx/glow1.png";
 	fields.push(img);
 }
 
+// init the stones 
 for(i=0;i<8;i++){
 	var img = new Image();
 	img.src = "gfx/stone" + (i+1) + ".png";
@@ -144,12 +174,30 @@ for(i=0;i<8;i++){
 	
 setStones();
 
-//shuffle(stones);
-//shuffle(stonePos);
+// more dificult if the stones are mixed
+shuffle(stones);
+shuffle(stonePos);
 
+// ###########################################################################	
+
+// set event for the AudioPlayer
 audioPlayer.addEventListener('ended', function() {
   playNextTrack();
 });
+
+function playIntro() {
+	
+	introStartet = true;
+	
+	// play teh intro (partly)
+	playlist =[];
+	playlist.push("games/thinx/thinx/sounds/intro.wav");
+	playlist.push("games/thinx/thinx/sounds/de/intro/i_01.wav");
+	playlist.push("games/thinx/thinx/sounds/de/p/start_0.wav");
+							
+	stopPlayback();
+	playAudio(playlist[currentTrackIndex]);	
+}
 
 function shuffle(array) {
   let currentIndex = array.length,  randomIndex;
@@ -225,8 +273,18 @@ function endDrag(){
 	}
 	console.log("--------------------");
 	
-	// pairs level 1
-	if (level == 1){
+	var subLevel = level % 3;
+	var round = Math.floor((level-1) / 3) + 1;
+	
+	console.log("Round " + round);
+	
+	// pairs level 1,4,...
+	if (subLevel == 1) {
+		
+		var pDIR = "games/thinx/thinx/sounds/de/p/p_";
+		pDIR = pDIR + pad(round, 2) + "/";
+		
+		console.log(pDIR);
 		
 		lst.sort()
 		
@@ -254,15 +312,18 @@ function endDrag(){
 									playlist.push("games/thinx/thinx/sounds/de/p/last.wav");
 									
 									if(moveNo % 2) {
-										playlist.push("games/thinx/thinx/sounds/de/p/p_01/" + (moveNo) + ".wav");
-										playlist.push("games/thinx/thinx/sounds/de/p/p_01/" + (moveNo + 1) + ".wav");
+										playlist.push(pDIR + (moveNo) + ".wav");
+										playlist.push(pDIR + (moveNo + 1) + ".wav");
 									}
 									else {
-										playlist.push("games/thinx/thinx/sounds/de/p/p_01/" + (moveNo + 1) + ".wav");
-										playlist.push("games/thinx/thinx/sounds/de/p/p_01/" + (moveNo + 2) + ".wav");
+										playlist.push(pDIR + (moveNo + 1) + ".wav");
+										playlist.push(pDIR + (moveNo + 2) + ".wav");
 									}
 									
 									playlist.push("games/thinx/thinx/sounds/de/quiz_n.wav");
+									if(level == 1) {
+										playlist.push("games/thinx/thinx/sounds/de/k/start_0.wav");
+									}
 							
 									stopPlayback();
 									playAudio(playlist[currentTrackIndex]);
@@ -270,7 +331,7 @@ function endDrag(){
 								else{
 									// correct match
 									playlist =[];
-									playlist.push("games/thinx/thinx/sounds/de/p/p_01/" + (moveNo + 1) + ".wav");
+									playlist.push(pDIR + (moveNo + 1) + ".wav");
 									playlist.push("games/thinx/thinx/sounds/de/p/done.wav");
 							
 									stopPlayback();
@@ -281,7 +342,7 @@ function endDrag(){
 							else{
 								// already done
 								playlist =[];
-								playlist.push("games/thinx/thinx/sounds/de/p/p_01/" + (moveNo + 1) + ".wav");
+								playlist.push(pDIR + (moveNo + 1) + ".wav");
 								playlist.push("games/thinx/thinx/sounds/de/p/ar_done1.wav");
 							
 								stopPlayback();
@@ -291,7 +352,8 @@ function endDrag(){
 						else {
 							// not correct
 							playlist =[];
-							playlist.push("games/thinx/thinx/sounds/de/p/p_01/" + (moveNo + 1) + ".wav");
+							playlist.push(pDIR + (moveNo + 1) + ".wav");
+							playlist.push("games/thinx/thinx/sounds/de/pause1.wav");
 							playlist.push("games/thinx/thinx/sounds/de/p/badpair2.wav");
 							
 							stopPlayback();
@@ -300,7 +362,7 @@ function endDrag(){
 					}
 					else{
 						/// one stone					
-						playOneAudioFile("games/thinx/thinx/sounds/de/p/p_01/" + (moveNo + 1) + ".wav");
+						playOneAudioFile(pDIR + (moveNo + 1) + ".wav");
 					}
 					break;
 				}
@@ -320,8 +382,13 @@ function endDrag(){
 		}
 	}
 	
-	// chain level 2
-	if (level == 2){
+	// chain level 2, 5, 8, ...
+	if (subLevel == 2){
+		
+		var kDIR = "games/thinx/thinx/sounds/de/k/k_";
+		kDIR = kDIR + pad(round, 2) + "/";
+		
+		console.log(pDIR);
 
 		for(i=0;i<8;i++){
 			
@@ -332,89 +399,15 @@ function endDrag(){
 				if(lst.length != 8){
 					
 					console.log("not enough stones");									
-					playOneAudioFile("games/thinx/thinx/sounds/de/k/k_01/" + (moveNo + 1) + ".wav");		
+					playOneAudioFile(kDIR + (moveNo + 1) + ".wav");		
 				}
 				
 				if(lst.length == 8){
 					
-						while(lst[0] != 0)
-						{
-							lst = arrayRotate(lst);
-						}
-						
-						// debug
-						for(i=0;i<lst.length;i++){
-							console.log(lst[i]);
-						}
-						console.log("--------------------");
-					
-						// TODO: always 8 elements?
-						if((lst[0] == 0 && lst[1] == 1 &&
-							lst[2] == 2 && lst[3] == 3 &&
-							lst[4] == 4 && lst[5] == 5 &&
-							lst[6] == 6 && lst[7] == 7) ||
-						   (lst[0] == 0 && lst[1] == 7 &&
-							lst[2] == 6 && lst[3] == 5 &&
-							lst[4] == 4 && lst[5] == 3 &&
-							lst[6] == 2 && lst[7] == 1)){
-								
-							console.log("correct order");
-							
-							levelFinished = true;
-																		
-							playlist =[];
-							playlist.push("games/thinx/thinx/sounds/de/all_done.wav");
-							playlist.push("games/thinx/thinx/sounds/de/k/k_01/tipp.wav");
-							playlist.push("games/thinx/thinx/sounds/de/k/k_01/1.wav");
-							playlist.push("games/thinx/thinx/sounds/de/k/k_01/2.wav");
-							playlist.push("games/thinx/thinx/sounds/de/k/k_01/3.wav");
-							playlist.push("games/thinx/thinx/sounds/de/k/k_01/4.wav");
-							playlist.push("games/thinx/thinx/sounds/de/k/k_01/5.wav");
-							playlist.push("games/thinx/thinx/sounds/de/k/k_01/6.wav");
-							playlist.push("games/thinx/thinx/sounds/de/k/k_01/7.wav");
-							playlist.push("games/thinx/thinx/sounds/de/k/k_01/8.wav");
-							playlist.push("games/thinx/thinx/sounds/de/quiz_n.wav");							
-
-							stopPlayback();
-							playAudio(playlist[currentTrackIndex]);							
-						}
-						else
-						{
-							// wrong order
-							playOneAudioFile("games/thinx/thinx/sounds/de/k/not_so.wav");
-							console.log("wrong order");
-						}
-				}				
-			}			
-		}
-	}
-	
-	// picture level 2
-	if (level == 3){
-
-		for(i=0;i<8;i++){
-			
-			if(checkPosition(stonePos[moveNo][0] + 50, stonePos[moveNo][1] + 50, fieldPos[i][0] + 50, fieldPos[i][1] + 50)){
-				
-				//console.log("play");
-				
-				// TODO: amout of stones
-				if(lst.length < 5){
-					playOneAudioFile("games/thinx/thinx/sounds/de/b/b_01/" + (moveNo + 1) + ".wav");
-				}
-				if(lst.length > 5) {
-					playlist =[];
-					playlist.push("games/thinx/thinx/sounds/de/b/b_01/" + (moveNo + 1) + ".wav");
-					playlist.push("games/thinx/thinx/sounds/de/b/too_much.wav");
-							
-					stopPlayback();
-					playAudio(playlist[currentTrackIndex]);
-				}
-				
-				// TODO: amout of stones
-				if(lst.length == 5){
-					
-					lst = lst.sort();
+					while(lst[0] != 0)
+					{
+						lst = arrayRotate(lst);
+					}
 					
 					// debug
 					for(i=0;i<lst.length;i++){
@@ -423,35 +416,156 @@ function endDrag(){
 					console.log("--------------------");
 				
 					// TODO: always 8 elements?
-					if(lst[0] == 0 && lst[1] == 1 &&
+					if((lst[0] == 0 && lst[1] == 1 &&
 						lst[2] == 2 && lst[3] == 3 &&
-						lst[4] == 4){
+						lst[4] == 4 && lst[5] == 5 &&
+						lst[6] == 6 && lst[7] == 7) ||
+					   (lst[0] == 0 && lst[1] == 7 &&
+						lst[2] == 6 && lst[3] == 5 &&
+						lst[4] == 4 && lst[5] == 3 &&
+						lst[6] == 2 && lst[7] == 1)){
+							
+						console.log("correct order");
+						
+						levelFinished = true;
+																	
+						playlist =[];
+						playlist.push("games/thinx/thinx/sounds/de/all_done.wav");
+						
+						playlist.push(kDIR + "tipp.wav");
+						playlist.push(kDIR + "1.wav");
+						playlist.push(kDIR + "2.wav");
+						playlist.push(kDIR + "3.wav");
+						playlist.push(kDIR + "4.wav");
+						playlist.push(kDIR + "5.wav");
+						playlist.push(kDIR + "6.wav");
+						playlist.push(kDIR + "7.wav");
+						playlist.push(kDIR + "8.wav");
+						
+						playlist.push("games/thinx/thinx/sounds/de/quiz_n.wav");	
+						if(level == 2) {
+							playlist.push("games/thinx/thinx/sounds/de/b/start_0.wav");
+						}
+
+						stopPlayback();
+						playAudio(playlist[currentTrackIndex]);							
+					}
+					else
+					{
+						// wrong order
+											
+						playlist =[];
+						playlist.push(kDIR + (moveNo + 1) + ".wav");
+						playlist.push("games/thinx/thinx/sounds/de/pause2.wav");
+						playlist.push("games/thinx/thinx/sounds/de/k/not_so.wav");
+					
+						stopPlayback();
+						playAudio(playlist[currentTrackIndex]);
+						
+						console.log("wrong order");
+					}
+				}				
+			}			
+		}
+	}
+	
+	// picture level 3, 6, 9, ...
+	if (subLevel == 0){
+		
+		var bDIR = "games/thinx/thinx/sounds/de/b/b_";
+		bDIR = bDIR + pad(round, 2) + "/";
+
+		for(i=0;i<8;i++){
+			
+			if(checkPosition(stonePos[moveNo][0] + 50, stonePos[moveNo][1] + 50, fieldPos[i][0] + 50, fieldPos[i][1] + 50)){				
+							
+				// TODO: amout of stones		
+				var cnt = [5,6,4,5,5,5,5,5,5,4,4,5,5,5,4,5,5,8,8,8,8,8,8,8,8];
+				
+				if(lst.length < cnt[round-1]){
+					
+					stopPlayback();
+					
+					playOneAudioFile(bDIR + (moveNo + 1) + ".wav");		
+					break;
+				}
+				
+				if(lst.length > cnt[round-1]) {
+					
+					stopPlayback();
+					
+					playlist =[];
+					playlist.push(bDIR + (moveNo + 1) + ".wav");
+					playlist.push("games/thinx/thinx/sounds/de/b/too_much.wav");						
+					
+					playAudio(playlist[currentTrackIndex]);
+					
+					break;
+				}
+				
+				if(lst.length == cnt[round-1]){
+					
+					lst = lst.sort();
+					
+					// debug
+					for(i=0;i<lst.length;i++){
+						console.log(lst[i]);
+					}
+					console.log("--------------------");
+					
+					var checkOK = true;
+					for(i=0;i<cnt[round-1];i++){
+						if(lst[i] != i) {
+							checkOK = false;
+						}
+					}
+				
+					if(checkOK){
+						
+						console.log("correct order");	
 						
 						levelFinished = true;
 						
 						// correct match
 						
-						playlist =[];
-						playlist.push("games/thinx/thinx/sounds/de/b/b_01/" + (moveNo + 1) + ".wav");
-						playlist.push("games/thinx/thinx/sounds/de/all_done.wav");
-						playlist.push("games/thinx/thinx/sounds/de/b/b_01/tipp.wav");
-						//playlist.push("games/thinx/thinx/sounds/de/b/b_01/1.wav");
-						//playlist.push("games/thinx/thinx/sounds/de/b/b_01/2.wav");
-						//playlist.push("games/thinx/thinx/sounds/de/b/b_01/3.wav");
-						//playlist.push("games/thinx/thinx/sounds/de/b/b_01/4.wav");
-						//playlist.push("games/thinx/thinx/sounds/de/b/b_01/5.wav");
-						playlist.push("games/thinx/thinx/sounds/de/quiz_n.wav");
-							
 						stopPlayback();
-						playAudio(playlist[currentTrackIndex]);
 						
-						console.log("correct order");									
+						playlist =[];
+						playlist.push(bDIR + (moveNo + 1) + ".wav");
+						playlist.push("games/thinx/thinx/sounds/de/all_done.wav");
+						playlist.push(bDIR + "tipp.wav");
+						
+						if(level == 6) {
+							playlist.push("games/thinx/thinx/sounds/de/reached1.wav");
+						}
+						if(level == 21) {
+							playlist.push("games/thinx/thinx/sounds/de/reached2.wav");
+						}
+						if(level == 51) {
+							playlist.push("games/thinx/thinx/sounds/de/reached3.wav");
+						}
+
+						playlist.push("games/thinx/thinx/sounds/de/quiz_n.wav");
+												
+						playAudio(playlist[currentTrackIndex]);	
+
+						break;
 					}
 					else
 					{
 						// wrong order
-						playOneAudioFile("games/thinx/thinx/sounds/de/b/not_so.wav");
 						console.log("wrong order");
+						
+						stopPlayback();
+						
+						playlist =[];
+						playlist.push(bDIR + (moveNo + 1) + ".wav");
+						playlist.push("games/thinx/thinx/sounds/de/pause2.wav");
+						playlist.push("games/thinx/thinx/sounds/de/b/not_so.wav");
+						
+						playAudio(playlist[currentTrackIndex]);	
+
+						break;						
 					}
 				}
 				
@@ -517,11 +631,11 @@ function playOneAudioFile(file) {
 					
 	playlist = [];
 	playlist.push(file);
-	playAudio(playlist);
+	playAudio(playlist[currentTrackIndex]);
 }
 
 function playAudio(file) {
-	
+		
 	console.log("play:" + file);
 	audioPlayer.src = file;
 	audioPlayer.play();
@@ -542,10 +656,25 @@ function playNextTrack() {
 		
 		if(levelFinished)
 		{
-			level = level + 1;
-			setStones();
+			if(level == 0) {
+				start = Date.now();
+			}
 			
-			levelFinished = false;
+			// fehlende Logik, hier ist erstmal Schluss!
+			if(level < 51) {
+			
+				level = level + 1;
+				setStones();
+				
+				// more dificult if the stones are mixed
+				shuffle(stones);
+				shuffle(stonePos);
+				
+				levelFinished = false;
+				gameStarted = true;
+				
+				solvedPair = [false,false,false,false];
+			}
 		}
   }
 }
@@ -556,8 +685,13 @@ function stopPlayback() {
 	currentTrackIndex = 0;
 }
 
+function pad(num, size) {
+    num = num.toString();
+    while (num.length < size) num = "0" + num;
+    return num;
+}
 
-
+// ###########################################################################	
 
 function draw() {
 	// delete field
@@ -579,33 +713,45 @@ function draw() {
 		{
 			fields[i].src = "gfx/glow1.png"
 		}
-		if(counter == 30)
+		else if(counter == 30)
 		{
 			fields[i].src = "gfx/glow2.png"
 		}
-		if(counter == 50)
+		else if(counter == 50)
 		{
 			fields[i].src = "gfx/glow3.png"
 		}
-		if(counter == 70)
+		else if(counter == 70)
 		{
 			fields[i].src = "gfx/glow2.png"
+		}
+		
+		if(levelFinished)
+		{
+			fields[i].src = "gfx/glow1.png"
 		}
 	}
 	
 	// draw info and buttons
 	ctx.drawImage(helpButton, 10, 10, 75, 75);
-		
-	var subLevel = level % 3;
-	// show mode
-	if(subLevel == 1){
-			ctx.drawImage(pairsMode, 715, 10, 75, 75);
+	
+	if(!introStartet) {
+		// draw start button
+		ctx.drawImage(startButton, canvas.width / 2 - (startButton.width / 2), canvas.height / 2 - (startButton.height / 2));
 	}
-	if(subLevel == 2){
-			ctx.drawImage(chainMode, 715, 10, 75, 75);
-	}
-	if(subLevel == 0){
-			ctx.drawImage(pictureMode, 715, 10, 75, 75);
+	
+	if(gameStarted) {
+		var subLevel = level % 3;
+		// show mode
+		if(subLevel == 1){
+				ctx.drawImage(pairsMode, 715, 10, 75, 75);
+		}
+		if(subLevel == 2){
+				ctx.drawImage(chainMode, 715, 10, 75, 75);
+		}
+		if(subLevel == 0){
+				ctx.drawImage(pictureMode, 715, 10, 75, 75);
+		}
 	}
 	
 	// draw fields
@@ -634,10 +780,37 @@ function draw() {
 	
 	secs = secs - (mins * 60);
 
-	document.getElementById('topText').innerHTML= 'Level ' + level + " - Time " +
-		hours.toLocaleString(undefined, {minimumIntegerDigits:2}) + ":" +
-		mins.toLocaleString(undefined, {minimumIntegerDigits:2}) + ":" +
-		secs.toLocaleString(undefined, {minimumIntegerDigits:2});
+	if(gameStarted) {	
+	
+		ctx.font = "30px Arial";
+		ctx.fillStyle = "white";
+		ctx.textAlign = "center";
+		
+		var tm = hours.toLocaleString(undefined, {minimumIntegerDigits:2}) + ":" +
+					mins.toLocaleString(undefined, {minimumIntegerDigits:2}) + ":" +
+					secs.toLocaleString(undefined, {minimumIntegerDigits:2});
+		
+		ctx.fillText("Level " + level + " - Time " + tm, canvas.width / 2, 30);
+	}
+
+	ctx.font = "18px Arial";
+	ctx.fillStyle = "white";
+	ctx.textAlign = "center";
+	
+	var diff = "Einführung";
+		
+	if(level > 51) {
+		diff = "Schwer";
+	}
+	else if(level > 21) {
+		diff = "Mittel";
+	}
+	else if(level > 6) {
+		diff = "Einfach";
+	}
+
+	ctx.fillText(diff, canvas.width - 60, canvas.height - 20);
+
 }
 
 setInterval(draw, 10);
