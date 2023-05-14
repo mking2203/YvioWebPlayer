@@ -15,10 +15,10 @@ gameStarted = false;
 solvedPair = [false,false,false,false];
 
 // debug
-level = 1;
-levelFinished = false;
-introStartet = true;
-gameStarted = true;
+//level = 1;
+//levelFinished = false;
+//introStartet = true;
+//gameStarted = true;
 
 const GameType = {
 	Pair: 0,
