@@ -1,9 +1,14 @@
 // init playfield
 var canvas = document.getElementById("myCanvas");
 var ctx = canvas.getContext("2d");
+// init audio player
+var audioPlayer = document.getElementById('audioPlayer');
+var currentTrackIndex = 0;
+var playlist =[];
 
 // data
-level = 2
+level = 1
+levelFinished = false;
 solvedPair = [false,false,false,false];
 
 const start = Date.now();
@@ -33,6 +38,7 @@ var fieldPos = [
 
 var helpButton = new Image();
 helpButton.src = "gfx/help.png"
+
 var pairsMode = new Image();
 pairsMode.src = "gfx/pairs.png"
 var chainMode = new Image();
@@ -53,27 +59,31 @@ var startMouse = [0,0];
 var counter = 0;
 var delay = 0;
 
+
 canvas.addEventListener('touchstart', function(e) { 
 	
 	//console.log("touchstart")
+	if(!levelFinished) {
 
-	var mousecoords = getTouchPos(canvas, e);
-	if (!move)
-	{
-		startDrag(mousecoords.x,mousecoords.y)
-		return;
+		var mousecoords = getTouchPos(canvas, e);
+		if (!move)
+		{
+			startDrag(mousecoords.x,mousecoords.y)
+			return;
+		}
 	}
 	
 }, false);
 canvas.addEventListener('mousedown', function(e) { 
 
 	//console.log("mousedown")
-
-	var mousecoords = getMousePos(canvas, e);
-	if (!move)
-	{
-		startDrag(mousecoords.x,mousecoords.y)
-		return;
+	if(!levelFinished) {
+		var mousecoords = getMousePos(canvas, e);
+		if (!move)
+		{
+			startDrag(mousecoords.x,mousecoords.y)
+			return;
+		}
 	}
 }, false);
  
@@ -115,10 +125,10 @@ canvas.addEventListener('mouseup', function(e) {
 	}
  }, false);
 
- backg.src = "gfx/thinx.png";
+backg.src = "gfx/thinx.png";
   
- var fields = [];
- var stones = [];
+var fields = [];
+var stones = [];
  
 for(i=0;i<8;i++){
 	var img = new Image();
@@ -136,6 +146,10 @@ setStones();
 
 //shuffle(stones);
 //shuffle(stonePos);
+
+audioPlayer.addEventListener('ended', function() {
+  playNextTrack();
+});
 
 function shuffle(array) {
   let currentIndex = array.length,  randomIndex;
@@ -221,7 +235,7 @@ function endDrag(){
 				
 				if(checkPosition(stonePos[moveNo][0] + 50, stonePos[moveNo][1] + 50, fieldPos[i][0] + 50, fieldPos[i][1] + 50)){
 					
-					console.log("play");
+					console.log("play " + moveNo);
 														
 					if(lst.length == 2){
 						if((lst[0] == 0 && lst[1] == 1) ||
@@ -232,41 +246,61 @@ function endDrag(){
 							if(solvedPair[lst[0]/2] == false){
 								solvedPair[lst[0]/2] = true;
 								if(solvedPair[0] && solvedPair[1] && solvedPair[2] && solvedPair[3]){
-									// last match
-									queue_sounds([new Audio("games/thinx/thinx/sounds/de/p/p_01/" + (moveNo + 1) + ".wav"),new Audio("games/thinx/thinx/sounds/de/p/last.wav")]);
 									
-									level = level + 1;
-									setStones();
+									levelFinished = true;
+									
+									// last match
+									playlist =[];
+									playlist.push("games/thinx/thinx/sounds/de/p/last.wav");
+									
+									if(moveNo % 2) {
+										playlist.push("games/thinx/thinx/sounds/de/p/p_01/" + (moveNo) + ".wav");
+										playlist.push("games/thinx/thinx/sounds/de/p/p_01/" + (moveNo + 1) + ".wav");
+									}
+									else {
+										playlist.push("games/thinx/thinx/sounds/de/p/p_01/" + (moveNo + 1) + ".wav");
+										playlist.push("games/thinx/thinx/sounds/de/p/p_01/" + (moveNo + 2) + ".wav");
+									}
+									
+									playlist.push("games/thinx/thinx/sounds/de/quiz_n.wav");
+							
+									stopPlayback();
+									playAudio(playlist[currentTrackIndex]);
 								}
 								else{
 									// correct match
-									queue_sounds([new Audio("games/thinx/thinx/sounds/de/p/p_01/" + (moveNo + 1) + ".wav"),new Audio("games/thinx/thinx/sounds/de/p/done.wav")]);
+									playlist =[];
+									playlist.push("games/thinx/thinx/sounds/de/p/p_01/" + (moveNo + 1) + ".wav");
+									playlist.push("games/thinx/thinx/sounds/de/p/done.wav");
+							
+									stopPlayback();
+									playAudio(playlist[currentTrackIndex]);
 								}
 								
 							}
 							else{
 								// already done
-								queue_sounds([new Audio("games/thinx/thinx/sounds/de/p/p_01/" + (moveNo + 1) + ".wav"),new Audio("games/thinx/thinx/sounds/de/p/ar_done1.wav")])
-							}
-								
+								playlist =[];
+								playlist.push("games/thinx/thinx/sounds/de/p/p_01/" + (moveNo + 1) + ".wav");
+								playlist.push("games/thinx/thinx/sounds/de/p/ar_done1.wav");
+							
+								stopPlayback();
+								playAudio(playlist[currentTrackIndex]);
+							}						
 						}
 						else {
 							// not correct
-							queue_sounds([new Audio("games/thinx/thinx/sounds/de/p/p_01/" + (moveNo + 1) + ".wav"),new Audio("games/thinx/thinx/sounds/de/p/badpair2.wav")]);
+							playlist =[];
+							playlist.push("games/thinx/thinx/sounds/de/p/p_01/" + (moveNo + 1) + ".wav");
+							playlist.push("games/thinx/thinx/sounds/de/p/badpair2.wav");
+							
+							stopPlayback();
+							playAudio(playlist[currentTrackIndex]);
 						}
 					}
 					else{
-						/// one stone
-						//queue_sounds([new Audio("games/thinx/thinx/sounds/de/p/p_01/" + (moveNo + 1) + ".wav")]);
-						
-						// Get references to the audio player and buttons
-						var audioPlayer = document.getElementById('audioPlayer');
-						
-						audioPlayer.pause();
-						audioPlayer.currentTime = 0;
-						
-						audioPlayer.src = "games/thinx/thinx/sounds/de/p/p_01/" + (moveNo + 1) + ".wav";
-						audioPlayer.play();
+						/// one stone					
+						playOneAudioFile("games/thinx/thinx/sounds/de/p/p_01/" + (moveNo + 1) + ".wav");
 					}
 					break;
 				}
@@ -277,8 +311,7 @@ function endDrag(){
 				
 				if(checkPosition(stonePos[moveNo][0] + 50, stonePos[moveNo][1] + 50, fieldPos[i][0] + 50, fieldPos[i][1] + 50)){
 									
-					var audio = new Audio("games/thinx/thinx/sounds/de/p/too_much.wav");
-					audio.play();
+					playOneAudioFile("games/thinx/thinx/sounds/de/p/too_much.wav");
 					
 					move = false;
 					return;
@@ -297,17 +330,9 @@ function endDrag(){
 				console.log("play");
 				
 				if(lst.length != 8){
-					//queue_sounds([new Audio("games/thinx/thinx/sounds/de/k/k_01/" + (moveNo + 1) + ".wav")]);
 					
-					// Get references to the audio player and buttons
-					var audioPlayer = document.getElementById('audioPlayer');
-						
-					audioPlayer.pause();
-					audioPlayer.currentTime = 0;
-						
-					audioPlayer.src = "games/thinx/thinx/sounds/de/k/k_01/" + (moveNo + 1) + ".wav";
-					audioPlayer.play();
-					
+					console.log("not enough stones");									
+					playOneAudioFile("games/thinx/thinx/sounds/de/k/k_01/" + (moveNo + 1) + ".wav");		
 				}
 				
 				if(lst.length == 8){
@@ -332,34 +357,35 @@ function endDrag(){
 							lst[2] == 6 && lst[3] == 5 &&
 							lst[4] == 4 && lst[5] == 3 &&
 							lst[6] == 2 && lst[7] == 1)){
-							
-							// correct match
-							queue_sounds([new Audio("games/thinx/thinx/sounds/de/k/k_01/" + (moveNo + 1) + ".wav"),
-											new Audio("games/thinx/thinx/sounds/de/k/k_01/tipp.wav"),
-											new Audio("games/thinx/thinx/sounds/de/k/k_01/1.wav"),
-											new Audio("games/thinx/thinx/sounds/de/k/k_01/2.wav"),
-											new Audio("games/thinx/thinx/sounds/de/k/k_01/3.wav"),
-											new Audio("games/thinx/thinx/sounds/de/k/k_01/4.wav"),
-											new Audio("games/thinx/thinx/sounds/de/k/k_01/5.wav"),
-											new Audio("games/thinx/thinx/sounds/de/k/k_01/6.wav"),
-											new Audio("games/thinx/thinx/sounds/de/k/k_01/7.wav"),
-											new Audio("games/thinx/thinx/sounds/de/k/k_01/8.wav")]);
+								
 							console.log("correct order");
-						
-							level = level + 1;
-							setStones();
 							
+							levelFinished = true;
+																		
+							playlist =[];
+							playlist.push("games/thinx/thinx/sounds/de/all_done.wav");
+							playlist.push("games/thinx/thinx/sounds/de/k/k_01/tipp.wav");
+							playlist.push("games/thinx/thinx/sounds/de/k/k_01/1.wav");
+							playlist.push("games/thinx/thinx/sounds/de/k/k_01/2.wav");
+							playlist.push("games/thinx/thinx/sounds/de/k/k_01/3.wav");
+							playlist.push("games/thinx/thinx/sounds/de/k/k_01/4.wav");
+							playlist.push("games/thinx/thinx/sounds/de/k/k_01/5.wav");
+							playlist.push("games/thinx/thinx/sounds/de/k/k_01/6.wav");
+							playlist.push("games/thinx/thinx/sounds/de/k/k_01/7.wav");
+							playlist.push("games/thinx/thinx/sounds/de/k/k_01/8.wav");
+							playlist.push("games/thinx/thinx/sounds/de/quiz_n.wav");							
+
+							stopPlayback();
+							playAudio(playlist[currentTrackIndex]);							
 						}
 						else
 						{
 							// wrong order
-							queue_sounds([new Audio("games/thinx/thinx/sounds/de/k/not_so.wav")]);
+							playOneAudioFile("games/thinx/thinx/sounds/de/k/not_so.wav");
 							console.log("wrong order");
 						}
-				}
-				
-			}
-				
+				}				
+			}			
 		}
 	}
 	
@@ -370,59 +396,69 @@ function endDrag(){
 			
 			if(checkPosition(stonePos[moveNo][0] + 50, stonePos[moveNo][1] + 50, fieldPos[i][0] + 50, fieldPos[i][1] + 50)){
 				
-				console.log("play");
+				//console.log("play");
 				
 				// TODO: amout of stones
-				if(lst.length != 5 && level < 5){
-					queue_sounds([new Audio("games/thinx/thinx/sounds/de/b/b_01/" + (moveNo + 1) + ".wav")]);
+				if(lst.length < 5){
+					playOneAudioFile("games/thinx/thinx/sounds/de/b/b_01/" + (moveNo + 1) + ".wav");
 				}
-				else{
-					queue_sounds([new Audio("games/thinx/thinx/sounds/de/b/b_01/" + (moveNo + 1) + ".wav"), new Audio("games/thinx/thinx/sounds/de/b/too_much.wav")]);
+				if(lst.length > 5) {
+					playlist =[];
+					playlist.push("games/thinx/thinx/sounds/de/b/b_01/" + (moveNo + 1) + ".wav");
+					playlist.push("games/thinx/thinx/sounds/de/b/too_much.wav");
+							
+					stopPlayback();
+					playAudio(playlist[currentTrackIndex]);
 				}
 				
 				// TODO: amout of stones
 				if(lst.length == 5){
 					
-						lst = lst.sort();
-						
-						// debug
-						for(i=0;i<lst.length;i++){
-							console.log(lst[i]);
-						}
-						console.log("--------------------");
+					lst = lst.sort();
 					
-						// TODO: always 8 elements?
-						if(lst[0] == 0 && lst[1] == 1 &&
-							lst[2] == 2 && lst[3] == 3 &&
-							lst[4] == 4){
-							
-							// correct match
-							queue_sounds([new Audio("games/thinx/thinx/sounds/de/k/k_01/" + (moveNo + 1) + ".wav"),
-											new Audio("games/thinx/thinx/sounds/de/k/k_01/tipp.wav"),
-											new Audio("games/thinx/thinx/sounds/de/k/k_01/1.wav"),
-											new Audio("games/thinx/thinx/sounds/de/k/k_01/2.wav"),
-											new Audio("games/thinx/thinx/sounds/de/k/k_01/3.wav"),
-											new Audio("games/thinx/thinx/sounds/de/k/k_01/4.wav"),
-											new Audio("games/thinx/thinx/sounds/de/k/k_01/5.wav")]);
-							console.log("correct order");
+					// debug
+					for(i=0;i<lst.length;i++){
+						console.log(lst[i]);
+					}
+					console.log("--------------------");
+				
+					// TODO: always 8 elements?
+					if(lst[0] == 0 && lst[1] == 1 &&
+						lst[2] == 2 && lst[3] == 3 &&
+						lst[4] == 4){
 						
-							level = level + 1;
-							setStones();
+						levelFinished = true;
+						
+						// correct match
+						
+						playlist =[];
+						playlist.push("games/thinx/thinx/sounds/de/b/b_01/" + (moveNo + 1) + ".wav");
+						playlist.push("games/thinx/thinx/sounds/de/all_done.wav");
+						playlist.push("games/thinx/thinx/sounds/de/b/b_01/tipp.wav");
+						//playlist.push("games/thinx/thinx/sounds/de/b/b_01/1.wav");
+						//playlist.push("games/thinx/thinx/sounds/de/b/b_01/2.wav");
+						//playlist.push("games/thinx/thinx/sounds/de/b/b_01/3.wav");
+						//playlist.push("games/thinx/thinx/sounds/de/b/b_01/4.wav");
+						//playlist.push("games/thinx/thinx/sounds/de/b/b_01/5.wav");
+						playlist.push("games/thinx/thinx/sounds/de/quiz_n.wav");
 							
-						}
-						else
-						{
-							// wrong order
-							queue_sounds([new Audio("games/thinx/thinx/sounds/de/k/not_so.wav")]);
-							console.log("wrong order");
-						}
+						stopPlayback();
+						playAudio(playlist[currentTrackIndex]);
+						
+						console.log("correct order");									
+					}
+					else
+					{
+						// wrong order
+						playOneAudioFile("games/thinx/thinx/sounds/de/b/not_so.wav");
+						console.log("wrong order");
+					}
 				}
 				
 			}
 				
 		}
 	}
-	
 	
 	move = false;
 }
@@ -475,31 +511,53 @@ function getStonesOnFields(){
 	return lst
 }
 
-// This plays a file, and call a callback once it completed (if a callback is set)
-function play(audio, callback) {
-
-	audio.play();
-	if(callback)
-	{
-		audio.onended = callback;
-	}
+function playOneAudioFile(file) {
+	
+	stopPlayback()
+					
+	playlist = [];
+	playlist.push(file);
+	playAudio(playlist);
 }
-function queue_sounds(sounds){
 
-    var index = 0;
-    function recursive_play()
-    {
-      if(index+1 === sounds.length)
-      {
-        play(sounds[index],null);
-      }
-      else
-      {
-        play(sounds[index],function(){index++; recursive_play();});
-      }
-    }
-	recursive_play();   
+function playAudio(file) {
+	
+	console.log("play:" + file);
+	audioPlayer.src = file;
+	audioPlayer.play();
 }
+
+function playNextTrack() {
+	
+	currentTrackIndex++;
+	console.log("play track ended");
+	
+	if (currentTrackIndex < playlist.length) {
+		var nextTrack = playlist[currentTrackIndex];
+		playAudio(nextTrack);
+		
+	} else {
+		console.log("playlist ended");
+		stopPlayback();
+		
+		if(levelFinished)
+		{
+			level = level + 1;
+			setStones();
+			
+			levelFinished = false;
+		}
+  }
+}
+
+function stopPlayback() {
+	audioPlayer.pause();
+	audioPlayer.currentTime = 0;
+	currentTrackIndex = 0;
+}
+
+
+
 
 function draw() {
 	// delete field
@@ -537,10 +595,8 @@ function draw() {
 	
 	// draw info and buttons
 	ctx.drawImage(helpButton, 10, 10, 75, 75);
-	
-	var subLevel = Math.trunc((level + 1) / 3);
-	subLevel = (level + 1) - (subLevel * 3);
-	
+		
+	var subLevel = level % 3;
 	// show mode
 	if(subLevel == 1){
 			ctx.drawImage(pairsMode, 715, 10, 75, 75);
@@ -548,7 +604,7 @@ function draw() {
 	if(subLevel == 2){
 			ctx.drawImage(chainMode, 715, 10, 75, 75);
 	}
-	if(subLevel == 3){
+	if(subLevel == 0){
 			ctx.drawImage(pictureMode, 715, 10, 75, 75);
 	}
 	
