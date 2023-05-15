@@ -14,8 +14,64 @@ introStartet = false;
 gameStarted = false;
 solvedPair = [false,false,false,false];
 
+const gamePath = "games/thinx/thinx/sounds/de/"
+
+// Bilder Lösungen
+var bs = [ "??b/b_01/s_00.wav",
+"??b/b_02/s_00.wav|%1|??b/b_02/s_02.wav|%2|??b/b_02/s_04.wav|%3|??b/b_02/s_06.wav|%4|??b/b_02/s_08.wav|%5|??b/b_02/s_10.wav", // buggy
+"??b/b_03/s_00.wav|%1|??b/b_03/s_02.wav|%2|??b/b_03/s_04.wav|%3|??b/b_03/s_06.wav|%4",
+"??b/b_04/tipp.wav|%1|%2|%3|%4|%5", // buggy
+"??b/b_05/s_00.wav|%1|??b/b_05/s_02.wav|%2|??b/b_05/s_04.wav|%3|??b/b_05/s_06.wav|%4|??b/b_05/s_08.wav|%5",
+"??b/b_06/s_00.wav|%1|??b/b_06/s_02.wav|%2|??b/b_06/s_04.wav|%3|??b/b_06/s_06.wav|%4|??b/b_06/s_08.wav|%5",
+"??b/b_07/s_00.wav",
+"??b/b_08/s_00.wav|%1|??b/b_08/s_02.wav|%2|??b/b_08/s_04.wav|%3|??b/b_08/s_06.wav|%4|??b/b_08/s_08.wav|%5",
+"??b/b_09/s_00.wav|%1|??b/b_09/s_02.wav|%2|??b/b_09/s_04.wav|%3|??b/b_09/s_06.wav|%4|??b/b_09/s_08.wav|%5",
+"??b/b_10/s_00.wav|%1|??b/b_10/s_02.wav|%2|??b/b_10/s_04.wav|%3|??b/b_10/s_06.wav|%4",
+"??b/b_11/s_00.wav|%1|??b/b_11/s_02.wav|%2|??b/b_11/s_04.wav|%3|??b/b_11/s_06.wav|%4",
+"??b/b_12/s_00.wav|%1|??b/b_12/s_02.wav|%2|??b/b_12/s_04.wav|%3|??b/b_12/s_06.wav|%4|??b/b_12/s_08.wav|%5|??b/b_12/s_10.wav|%6",
+"",
+"??b/b_14/s_00.wav",
+"??b/b_15/s_00.wav",
+"??b/b_16/s_00.wav",
+"??b/b_17/s_00.wav",
+"??b/b_18/s_00.wav|%1|??b/b_18/s_02.wav|%2|??b/b_18/s_04.wav|%3|??b/b_18/s_06.wav|%4|??b/b_18/s_08.wav|%5|??b/b_18/s_10.wav|%6|??b/b_18/s_12.wav|%7|??b/b_18/s_14.wav|%8",
+"",
+"",
+"",
+"",
+"",
+"",
+"%1|??b/b_25/s_00.wav|%2|%3|??b/b_25/s_02.wav|%4|??b/b_25/s_04.wav|%5|%6|??b/b_25/s_06.wav|%7|%8" ];
+
+// Sequence Lösung
+var ks = [ "%1|%2|%3|%4|%5|%6|%7|%8",
+"%1|%2|%3|%4|%5|%6|%7|%8",
+"%1|%2|%3|%4|%5|%6|%7|%8",
+"%1|%2|%3|%4|%5|%6|%7|%8",
+"%1|%2|%3|%4|%5|%6|%7|%8",
+"%1|%2|%3|%4|%5|%6|%7|%8",
+"%1|%2|%3|%4|%5|%6|%7|%8",
+"%1|%2|%3|%4|%5|%6|%7|%8",
+"%1|??k/k_09/s_00.wav|%2|??k/k_09/s_02.wav|%3|??k/k_09/s_04.wav|%4|??k/k_09/s_06.wav|%5|??k/k_09/s_08.wav|%6|??k/k_09/s_10.wav|%7|??k/k_09/s_12.wav|%8|??k/k_09/s_14.wav",
+"%1|%2|%3|%4|%5|%6|%7|%8",
+"%1|%2|%3|%4|%5|%6|%7|%8",
+"%1|??k/k_12/s_00.wav|%2|??k/k_12/s_02.wav|%3|??k/k_12/s_04.wav|%4|??k/k_12/s_06.wav|%5|??k/k_12/s_08.wav|%6|??k/k_12/s_10.wav|%7|??k/k_12/s_12.wav|%8|??k/k_12/s_14.wav",
+"%1|%2|%3|%4|%5|%6|%7|%8",
+"%1|%2|%3|%4|%5|%6|%7|%8",
+"??k/k_15/s_00.wav",
+"%1|%2|%3|%4|%5|%6|%7|%8",
+"%1|%2|%3|%4|%5|%6|%7|%8",
+"%1|%2|%3|%4|%5|%6|%7|%8",
+"%1|%2|%3|%4|%5|%6|%7|%8",
+"%1|%2|%3|%4|%5|%6|%7|%8",
+"%1|%2|%3|%4|%5|%6|%7|%8",
+"%1|??k/k_22/s_00.wav|%2|??k/k_22/s_02.wav|%3|??k/k_22/s_04.wav|%4|??k/k_22/s_06.wav|%5|??k/k_22/s_08.wav|%6|??k/k_22/s_10.wav|%7|??k/k_22/s_12.wav|%8|??k/k_22/s_14.wav",
+"%1|??k/k_23/s_00.wav|%2|??k/k_23/s_02.wav|%3|??k/k_23/s_04.wav|%4|??k/k_23/s_06.wav|%5|??k/k_23/s_08.wav|%6|??k/k_23/s_10.wav|%7|??k/k_23/s_12.wav|%8|??k/k_23/s_14.wav",
+"%1|%2|%3|%4|%5|%6|%7|%8",
+"??k/k_25/s_00.wav" ];
+
 // debug
-//level = 18;
+//level = 11;
 //levelFinished = false;
 //introStartet = true;
 //gameStarted = true;
@@ -178,8 +234,8 @@ for(i=0;i<8;i++){
 setStones();
 
 // more dificult if the stones are mixed
-shuffle(stones);
-shuffle(stonePos);
+// shuffle(stones);
+// shuffle(stonePos);
 
 // ###########################################################################	
 
@@ -435,16 +491,24 @@ function endDrag(){
 						playlist =[];
 						playlist.push("games/thinx/thinx/sounds/de/all_done.wav");
 						
-						playlist.push(kDIR + "tipp.wav");
-						playlist.push(kDIR + "1.wav");
-						playlist.push(kDIR + "2.wav");
-						playlist.push(kDIR + "3.wav");
-						playlist.push(kDIR + "4.wav");
-						playlist.push(kDIR + "5.wav");
-						playlist.push(kDIR + "6.wav");
-						playlist.push(kDIR + "7.wav");
-						playlist.push(kDIR + "8.wav");
+						var solution = ks[round-1];
+						var sols = solution.split("|");
+						console.log(sols)
 						
+						//playlist.push(kDIR + "tipp.wav");
+						
+						for(i=0;i<sols.length;i++){
+							if(sols[i] == "%1") { playlist.push(kDIR + "1.wav"); };
+							if(sols[i] == "%2") { playlist.push(kDIR + "2.wav"); };
+							if(sols[i] == "%3") { playlist.push(kDIR + "3.wav"); };
+							if(sols[i] == "%4") { playlist.push(kDIR + "4.wav"); };
+							if(sols[i] == "%5") { playlist.push(kDIR + "5.wav"); };
+							if(sols[i] == "%6") { playlist.push(kDIR + "6.wav"); };
+							if(sols[i] == "%7") { playlist.push(kDIR + "7.wav"); };
+							if(sols[i] == "%8") { playlist.push(kDIR + "8.wav"); };
+							if(sols[i].startsWith("??")) { playlist.push(sols[i].replace("??",gamePath)); };
+						}
+																		
 						playlist.push("games/thinx/thinx/sounds/de/quiz_n.wav");	
 						if(level == 2) {
 							playlist.push("games/thinx/thinx/sounds/de/b/start_0.wav");
@@ -536,7 +600,24 @@ function endDrag(){
 						playlist =[];
 						playlist.push(bDIR + (moveNo + 1) + ".wav");
 						playlist.push("games/thinx/thinx/sounds/de/all_done.wav");
-						playlist.push(bDIR + "tipp.wav");
+						
+						//playlist.push(bDIR + "tipp.wav");
+						
+						var solution = bs[round-1];
+						var sols = solution.split("|");
+						console.log(sols)
+						
+						for(i=0;i<sols.length;i++){
+							if(sols[i] == "%1") { playlist.push(bDIR + "1.wav"); };
+							if(sols[i] == "%2") { playlist.push(bDIR + "2.wav"); };
+							if(sols[i] == "%3") { playlist.push(bDIR + "3.wav"); };
+							if(sols[i] == "%4") { playlist.push(bDIR + "4.wav"); };
+							if(sols[i] == "%5") { playlist.push(bDIR + "5.wav"); };
+							if(sols[i] == "%6") { playlist.push(bDIR + "6.wav"); };
+							if(sols[i] == "%7") { playlist.push(bDIR + "7.wav"); };
+							if(sols[i] == "%8") { playlist.push(bDIR + "8.wav"); };
+							if(sols[i].startsWith("??")) { playlist.push(sols[i].replace("??",gamePath)); };
+						}
 						
 						if(level == 6) {
 							playlist.push("games/thinx/thinx/sounds/de/reached1.wav");
@@ -754,6 +835,9 @@ function draw() {
 	ctx.arc(topX + 65, topY + 65, 100, 0, 2 * Math.PI);
 	ctx.fill();
 	ctx.stroke();
+	
+	topX = canvas.width / 2 - 82;
+	topY = canvas.height / 2 - 67;
 		
 	for (var i = 0; i < 12; i++) {
 		for (var j = 0; j < 12; j++) {
@@ -810,7 +894,7 @@ function draw() {
 			//ctx.fillStyle = 'orange';
 			ctx.fillStyle = 'grey';
 			
-			ctx.arc(topX + (i * 12), topY + (j * 12), 6, 0, 2 * Math.PI);
+			ctx.arc(topX + (i * 14), topY + (j * 14), 6, 0, 2 * Math.PI);
 			ctx.fill();
 			ctx.stroke();
 		}
