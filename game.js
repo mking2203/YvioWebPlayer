@@ -17,7 +17,7 @@ solvedPair = [false,false,false,false];
 const gamePath = "games/thinx/thinx/sounds/de/"
 
 // debug
-//level = 1;
+//level = 2;
 //levelFinished = false;
 //introStartet = true;
 //gameStarted = true;
@@ -392,6 +392,7 @@ function endDrag(){
 				if(checkPosition(stonePos[moveNo][0] + 50, stonePos[moveNo][1] + 50, fieldPos[i][0] + 50, fieldPos[i][1] + 50)){
 									
 					playOneAudioFile("games/thinx/thinx/sounds/de/p/too_much.wav");
+					display = "-";
 					
 					move = false;
 					return;
@@ -417,7 +418,23 @@ function endDrag(){
 				if(lst.length != 8){
 					
 					console.log("not enough stones");									
-					playOneAudioFile(kDIR + (moveNo + 1) + ".wav");		
+					playOneAudioFile(kDIR + (moveNo + 1) + ".wav");	
+
+					lst.sort();
+					
+					var ok = true;
+					if(lst.length > 1) {
+						for(j=0;j<lst.length-1;j++){
+							console.log("test " + lst[j]);
+							console.log("test " + lst[j+1]);
+							if(lst[j]+1 != lst[j+1]) {
+								ok = false;
+							}
+						}
+					}
+					if(ok) { display = "+"; }
+					else { display = "-"; }
+					
 				}
 				
 				if(lst.length == 8){
@@ -446,6 +463,7 @@ function endDrag(){
 						console.log("correct order");
 						
 						levelFinished = true;
+						display = "+";
 																	
 						playlist =[];
 						playlist.push("games/thinx/thinx/sounds/de/all_done.wav");
