@@ -58,6 +58,9 @@ var fieldPos = [
   [70, 250]
 ];
 
+var playButton = new Image();
+playButton.src = "gfx/play.png";
+
 var helpButton = new Image();
 helpButton.src = "gfx/help.png";
 
@@ -114,9 +117,11 @@ canvas.addEventListener('mousedown', function(e) {
 			return;
 		}
 	}
-	
-	if(checkPosition(mousecoords.x, mousecoords.y, canvas.width / 2, canvas.height / 2)){
-		playIntro();
+		
+	if(checkPosition(mousecoords.x, mousecoords.y, canvas.width / 2, canvas.height - startButton.height - 10)){
+		if(!introStartet) {
+			playIntro();
+		}
 	}
 	
 }, false);
@@ -184,6 +189,11 @@ setStones();
 shuffle(stones);
 shuffle(stonePos);
 
+// Retrieving the saved number from local storage
+var savedNumber = localStorage.getItem('yvioLevel_A');
+
+console.log("SAVE: " + savedNumber);
+
 // ###########################################################################	
 
 // set event for the AudioPlayer
@@ -199,6 +209,7 @@ function playIntro() {
 	playlist =[];
 	playlist.push("games/thinx/thinx/sounds/intro.wav");
 	playlist.push("games/thinx/thinx/sounds/de/intro/i_01.wav");
+	playlist.push("games/thinx/thinx/sounds/de/intro/i_02.wav");
 	playlist.push("games/thinx/thinx/sounds/de/p/start_0.wav");
 							
 	stopPlayback();
@@ -466,13 +477,13 @@ function endDrag(){
 						display = "+";
 																	
 						playlist =[];
-						playlist.push("games/thinx/thinx/sounds/de/all_done.wav");
+						playlist.push("games/thinx/thinx/sounds/de/success3.wav");
 						
 						var solution = ks[round-1];
 						var sols = solution.split("|");
 						console.log(sols)
 						
-						//playlist.push(kDIR + "tipp.wav");
+						playlist.push(kDIR + "tipp.wav");
 						
 						for(i=0;i<sols.length;i++){
 							if(sols[i] == "%1") { playlist.push(kDIR + "1.wav"); };
@@ -497,7 +508,8 @@ function endDrag(){
 					else
 					{
 						// wrong order
-											
+						display = "-";
+						
 						playlist =[];
 						playlist.push(kDIR + (moveNo + 1) + ".wav");
 						playlist.push("games/thinx/thinx/sounds/de/pause2.wav");
@@ -737,6 +749,9 @@ function playNextTrack() {
 				gameStarted = true;
 				
 				solvedPair = [false,false,false,false];
+				
+				// Saving a number to local storage
+				localStorage.setItem('yvioLevel_A', level);
 			}
 		}
   }
@@ -761,6 +776,7 @@ function getBit(number, bitPosition) {
 // ###########################################################################	
 
 function draw() {
+	
 	// delete field
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 	
@@ -799,8 +815,11 @@ function draw() {
 		}
 	}
 	
-	// draw info and buttons
+	// draw info
 	ctx.drawImage(helpButton, 10, 10, 75, 75);
+	
+	// draw play
+	ctx.drawImage(playButton, 10, canvas.height - 85, 75, 75);
 	
 	// draw led
 	var topX = canvas.width / 2 - 55;
@@ -896,7 +915,7 @@ function draw() {
 	
 	if(!introStartet) {
 		// draw start button
-		ctx.drawImage(startButton, canvas.width / 2 - (startButton.width / 2), canvas.height / 2 - (startButton.height / 2));
+		ctx.drawImage(startButton, canvas.width / 2 - (startButton.width / 2), canvas.height - startButton.height - 10);
 	}
 	
 	if(gameStarted) {
@@ -920,8 +939,8 @@ function draw() {
 	}
 	
 	// draw stones
-	for(i=0;i<8;i++){
-	ctx.drawImage(stones[i], stonePos[i][0], stonePos[i][1], 100 , 100);
+	for(i=0;i<8;i++) {
+		ctx.drawImage(stones[i], stonePos[i][0], stonePos[i][1], 100 , 100);
 	}
 		
 	// measure game time and display it
