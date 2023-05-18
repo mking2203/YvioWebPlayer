@@ -8,4 +8,4 @@ Die Yvio Spielkonsole wurde 2008 veröffentlicht. Es handelte sich um mehrer Bre
 2. SD Karten Inhalt unter games/thinx/ kopieren
 3. index.htm starten
 
-https://github.com/mking2203/YvioWebPlayer/blob/main/Screenshot.png?raw=true
+![Screenshot](https://github.com/mking2203/YvioWebPlayer/assets/17987600/e933d1e9-7add-4eb2-aa29-715005b64b9f)
