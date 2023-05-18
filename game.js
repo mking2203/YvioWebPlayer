@@ -13,61 +13,22 @@ let elapsedTime = 0; // Variable to store the elapsed time
 let isRunning = false; // Variable to indicate whether the timer is currently running
 
 // data
-var level;
-var gameType;
-var round;
-var difficulty; // TODO from file
-
-var gameState = 0;
+var level = 1;
+var gameType = GameType.Pair;
+var round = 1;
+var difficulty = Difficulty.Introduce; // TODO from file
+var gameState = GameState.Start;
 
 var solvedPair = [false, false, false, false];
 var helpCounter = 0;
 
 // thinx path to sound files
 const gamePath = "games/thinx/thinx/sounds/de/";
-var levelDIR;
+var levelDIR = "";
 
 // init the display
 var led = [,];
 var display = "";
-
-const GameType = {
-    Pair: 1,
-    Sequence: 2,
-    Picture: 0,
-    Nothing: -1
-}
-
-const GameState = {
-    Start: 0,
-    Intro: 1,
-    Running: 2,
-    Solution: 3,
-    Help: 4
-}
-
-// holds the stone position
-var stonePos = [
-    [0, 0],
-    [0, 0],
-    [0, 0],
-    [0, 0],
-    [0, 0],
-    [0, 0],
-    [0, 0],
-    [0, 0]
-];
-// holds the field position
-var fieldPos = [
-    [225, 90],
-    [490, 90],
-    [655, 250],
-    [650, 500],
-    [490, 650],
-    [240, 650],
-    [75, 500],
-    [70, 250]
-];
 
 var playButton = new Image();
 playButton.src = "gfx/play.png";
@@ -103,7 +64,7 @@ canvas.addEventListener('touchstart', function (e) {
 
     //console.log("touchstart")
     handleDownEvent(getTouchPos(canvas, e));
-   
+
 }, false);
 canvas.addEventListener('mousedown', function (e) {
 
@@ -131,15 +92,11 @@ canvas.addEventListener('mousemove', function (e) {
 
 canvas.addEventListener('touchend', function (e) {
 
-    //console.log("touchend")
-
     if (move) {
         endDrag();
     }
 }, false);
 canvas.addEventListener('mouseup', function (e) {
-
-    //console.log("mouseup")
 
     if (move) {
         endDrag();
@@ -185,8 +142,6 @@ console.log("SAVE: " + savedNumber);
 
 function handleDownEvent(mousecoords) {
 
-    console.log("gamestate "  + gameState);
-
     if (gameState == GameState.Running) {
 
         if (checkPosition(mousecoords.x, mousecoords.y, 50, 50)) {
@@ -196,38 +151,45 @@ function handleDownEvent(mousecoords) {
 
         if (!move) {
             startDrag(mousecoords.x, mousecoords.y)
-
             return;
         }
     }
 
     if (checkPosition(mousecoords.x, mousecoords.y, canvas.width / 2, canvas.height - startButton.height - 10)) {
 
-        if (gameState == GameState.Start) {
-            playIntro();
-        }
-        else {
-            stopPlayback();
-
-            if (gameState == GameState.Intro) {
-                gameState = GameState.Running;
-
-                startTimer();
+        if (gameState == GameState.Start ||
+            gameState == GameState.Intro ||
+            gameState == GameState.Help ||
+            gameState == GameState.Solution) {
+            if (gameState == GameState.Start) {
+                playIntro();
             }
+            else {
 
-            if (gameState == GameState.Help) {
-                gameState = GameState.Running;
-            }
+                stopPlayback();
 
-            if (gameState == GameState.Solution) {
+                // stop the intro
+                if (gameState == GameState.Intro) {
+                    gameState = GameState.Running;
 
-                nextLevel();
-                gameState = GameState.Running;
+                    startTimer();
+                }
+                // help is playing - now continue
+                if (gameState == GameState.Help) {
+                    gameState = GameState.Running;
+                }
+                // solution - so continue
+                if (gameState == GameState.Solution) {
 
-            }
+                    nextLevel();
+                    gameState = GameState.Running;
 
-            if (!isRunning) {
-                startTimer();
+                }
+
+                //start the time if paused
+                if (!isRunning) {
+                    startTimer();
+                }
             }
         }
     }
@@ -264,6 +226,17 @@ function initLevel(selectLevel) {
 
     helpCounter = 0;
     solvedPair = [false, false, false, false];
+
+    difficulty = 0;
+    if (level > 6) {
+        difficulty = Difficulty.Easy;
+    }
+    if (level > 21) {
+        difficulty = Difficulty.Medium;
+    }
+    if (level > 51) {
+        difficulty = Difficulty.Hard;
+    }
 }
 
 function nextLevel() {
@@ -277,12 +250,22 @@ function nextLevel() {
         localStorage.setItem('yvioLevel_A', level);
 
         gameState = GameState.Running;
+
+        difficulty = 0;
+
+        if (level > 6) {
+            difficulty = Difficulty.Easy;
+        }
+        if (level > 21) {
+            difficulty = Difficulty.Medium;
+        }
+        if (level > 51) {
+            difficulty = Difficulty.Hard;
+        }
     }
 }
 
 function playIntro() {
-
-    console.log("play intro");
 
     stopPlayback();
 
@@ -318,7 +301,6 @@ function playHelp() {
     }
 
     var parts = listPlay.split("|");
-    //console.log(parts)
 
     for (i = 0; i < parts.length; i++) {
         if (parts[i] == "%1") { playlist.push(levelDIR + "1.wav"); };
@@ -564,8 +546,10 @@ function endDrag() {
                             }
                         }
                     }
-                    if (ok) { display = "+"; }
-                    else { display = "-"; }
+                    if (difficulty == 0) {
+                        if (ok) { display = "+"; }
+                        else { display = "-"; }
+                    }
 
                 }
 
@@ -656,6 +640,22 @@ function endDrag() {
 
                 if (lst.length < cnt[round - 1]) {
 
+                    var checkOK = true;
+                    for (i = 0; i < cnt[round - 1]; i++) {
+                        if (lst[i] >= cnt[round - 1]) {
+                            checkOK = false;
+                        }
+                    }
+
+                    if (difficulty == 0) {
+                        if (checkOK) {
+                            display = "+";
+                        }
+                        else {
+                            display = "-";
+                        }
+                    }
+
                     stopPlayback();
 
                     playOneAudioFile(levelDIR + (moveNo + 1) + ".wav");
@@ -663,6 +663,8 @@ function endDrag() {
                 }
 
                 if (lst.length > cnt[round - 1]) {
+
+                    display = "-";
 
                     stopPlayback();
 
@@ -694,7 +696,8 @@ function endDrag() {
 
                     if (checkOK) {
 
-                        console.log("correct order");
+                        display = "+";
+                        console.log("correct combination");
 
                         gameState = GameState.Solution;
 
@@ -705,8 +708,6 @@ function endDrag() {
                         playlist = [];
                         playlist.push(levelDIR + (moveNo + 1) + ".wav");
                         playlist.push("games/thinx/thinx/sounds/de/all_done.wav");
-
-                        //playlist.push(levelDIR + "tipp.wav");
 
                         var solution = bs[round - 1];
                         var sols = solution.split("|");
@@ -743,8 +744,11 @@ function endDrag() {
                         break;
                     }
                     else {
+
+                        display = "-";
+
                         // wrong order
-                        console.log("wrong order");
+                        console.log("wrong combination");
 
                         stopPlayback();
 
@@ -1047,10 +1051,23 @@ function draw() {
         }
     }
 
-    // draw start button
-    ctx.drawImage(startButton, canvas.width / 2 - (startButton.width / 2), canvas.height - startButton.height - 10);
+    if (gameState == GameState.Start ||
+        gameState == GameState.Intro ||
+        gameState == GameState.Help ||
+        gameState == GameState.Solution) {
 
-    if (gameState == GameState.Running) {;
+        // draw start button
+        if (counter < 45) {
+            startButton.src = "gfx/ok_2.png";
+        }
+        else {
+            startButton.src = "gfx/ok_3.png";
+        }
+        ctx.drawImage(startButton, canvas.width / 2 - (startButton.width / 2), canvas.height - startButton.height - 10);
+    }
+
+    if (gameState == GameState.Running) {
+        
         // show mode
         if (gameType == GameType.Pair) {
             ctx.drawImage(pairsMode, 715, 10, 75, 75);
@@ -1104,17 +1121,15 @@ function draw() {
     ctx.textAlign = "center";
 
     var diff = "Einführung";
-
-    if (level > 51) {
+    if (difficulty == Difficulty.Hard) {
         diff = "Schwer";
     }
-    else if (level > 21) {
+    else if (difficulty == Difficulty.Medium) {
         diff = "Mittel";
     }
-    else if (level > 6) {
+    else if (difficulty == Difficulty.Easy) {
         diff = "Einfach";
     }
-
     ctx.fillText(diff, canvas.width - 60, canvas.height - 20);
 
 }
