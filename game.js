@@ -127,16 +127,23 @@ for (i = 0; i < 8; i++) {
     stones.push(img);
 }
 
-// init the level
-initLevel(1);
-
 // disable input
 gameState = GameState.Start;
 
 // Retrieving the saved number from local storage
 var savedNumber = localStorage.getItem('yvioLevel_A');
 
-console.log("SAVE: " + savedNumber);
+// restore game to last point
+if (savedNumber != null) {
+    initLevel(savedNumber);
+}
+else {
+    // new game
+    initLevel(1);
+}
+
+// init the level (debug)
+//initLevel(8);
 
 // ###########################################################################
 
@@ -162,7 +169,12 @@ function handleDownEvent(mousecoords) {
             gameState == GameState.Help ||
             gameState == GameState.Solution) {
             if (gameState == GameState.Start) {
-                playIntro();
+                if (level == 1) {
+                    playIntro();
+                }
+                else {
+                    playIntroShort();
+                }
             }
             else {
 
@@ -248,6 +260,7 @@ function nextLevel() {
 
         // Saving a number to local storage
         localStorage.setItem('yvioLevel_A', level);
+        localStorage.setItem('yvioLevel_A_time', getElapsedTime());
 
         gameState = GameState.Running;
 
@@ -262,6 +275,42 @@ function nextLevel() {
         if (level > 51) {
             difficulty = Difficulty.Hard;
         }
+
+        // next difficulty ?
+        // TODO from file
+
+        stopPlayback();
+
+        playlist = [];
+
+        playlist.push("games/thinx/thinx/sounds/de/quiz_n.wav");
+
+        if (level == 2) {
+            playlist.push("games/thinx/thinx/sounds/de/k/start_0.wav");
+        }
+        if (level == 3) {
+            playlist.push("games/thinx/thinx/sounds/de/b/start_0.wav");
+        }
+
+        if (gameType == GameType.Picture) {
+            if (p_StonesCount[round - 1] == 4) { playlist.push("games/thinx/thinx/sounds/de/b/help_c4.wav"); };
+            if (p_StonesCount[round - 1] == 5) { playlist.push("games/thinx/thinx/sounds/de/b/help_c5.wav"); };
+            if (p_StonesCount[round - 1] == 6) { playlist.push("games/thinx/thinx/sounds/de/b/help_c6.wav"); };
+            if (p_StonesCount[round - 1] == 7) { playlist.push("games/thinx/thinx/sounds/de/b/help_c7.wav"); };
+            if (p_StonesCount[round - 1] == 8) { playlist.push("games/thinx/thinx/sounds/de/b/help_c8.wav"); };
+        }
+
+        if (level == 7) {
+            playlist.push("games/thinx/thinx/sounds/de/reached1.wav");
+        }
+        if (level == 22) {
+            playlist.push("games/thinx/thinx/sounds/de/reached2.wav");
+        }
+        if (level == 52) {
+            playlist.push("games/thinx/thinx/sounds/de/reached3.wav");
+        }
+
+        playAudio(playlist[currentTrackIndex]);
     }
 }
 
@@ -276,6 +325,18 @@ function playIntro() {
     playlist.push(gamePath + "intro/i_01.wav");
     playlist.push(gamePath + "intro/i_02.wav");
     playlist.push(gamePath + "p/start_0.wav");
+
+    playAudio(playlist[currentTrackIndex]);
+}
+
+function playIntroShort() {
+
+    stopPlayback();
+
+    gameState = GameState.Intro;
+
+    playlist = [];
+    playlist.push("games/thinx/thinx/sounds/intro.wav");
 
     playAudio(playlist[currentTrackIndex]);
 }
@@ -396,11 +457,24 @@ function endDrag() {
     // end drag & drop
     move = false;
 
+    // moveNo is the actual stone, now check if stone has placed
+    var stoneOnField = false;
+
+    for (i = 0; i < 8; i++) {
+
+        if (checkPosition(stonePos[moveNo][0] + 50, stonePos[moveNo][1] + 50, fieldPos[i][0] + 50, fieldPos[i][1] + 50)) {
+            console.log("Stone " + (moveNo + 1) + " has been placed on field " + (i + 1));
+            stoneOnField = true;
+        }
+    }
+
     // get stones on the fields
     lst = getStonesOnFields();
 
     // clear LED display
     display = "";
+
+    console.log("--------------------");
 
     // debug - show stones
     for (i = 0; i < lst.length; i++) {
@@ -413,111 +487,95 @@ function endDrag() {
     // pairs level 1,4,...
     if (gameType == GameType.Pair) {
 
-        // sort stones
-        lst.sort()
+        if (stoneOnField) {
 
-        // do we have one or two stones?
-        if (lst.length <= 2) {
+            // sort stones
+            lst.sort()
 
-            for (i = 0; i < 8; i++) {
+            // do we have one or two stones?
+            if (getCountStones(lst) <= 2) {
 
-                if (checkPosition(stonePos[moveNo][0] + 50, stonePos[moveNo][1] + 50, fieldPos[i][0] + 50, fieldPos[i][1] + 50)) {
+                // correct count of stones
+                if (getCountStones(lst) == 2) {
+                    if ((lst[6] == 1 && lst[7] == 2) ||
+                        (lst[6] == 3 && lst[7] == 4) ||
+                        (lst[6] == 5 && lst[7] == 6) ||
+                        (lst[6] == 7 && lst[7] == 8)) {
 
-                    if (lst.length == 2) {
-                        if ((lst[0] == 0 && lst[1] == 1) ||
-                            (lst[0] == 2 && lst[1] == 3) ||
-                            (lst[0] == 4 && lst[1] == 5) ||
-                            (lst[0] == 6 && lst[1] == 7)) {
+                        if (solvedPair[(lst[7] / 2) - 1] == false) {
+                            solvedPair[(lst[7] / 2) - 1] = true;
+                            if (solvedPair[0] && solvedPair[1] && solvedPair[2] && solvedPair[3]) {
 
-                            if (solvedPair[lst[0] / 2] == false) {
-                                solvedPair[lst[0] / 2] = true;
-                                if (solvedPair[0] && solvedPair[1] && solvedPair[2] && solvedPair[3]) {
+                                gameState = GameState.Solution;
 
-                                    gameState = GameState.Solution;
+                                display = "+";
+                                stopPlayback();
 
-                                    display = "+";
+                                // last match
+                                playlist = [];
+                                playlist.push(levelDIR + (moveNo + 1) + ".wav");
+                                playlist.push("games/thinx/thinx/sounds/de/p/last.wav");
 
-                                    // last match
-                                    playlist = [];
+                                if (moveNo % 2) {
+                                    playlist.push(levelDIR + (moveNo) + ".wav");
                                     playlist.push(levelDIR + (moveNo + 1) + ".wav");
-                                    playlist.push("games/thinx/thinx/sounds/de/p/last.wav");
-
-                                    if (moveNo % 2) {
-                                        playlist.push(levelDIR + (moveNo) + ".wav");
-                                        playlist.push(levelDIR + (moveNo + 1) + ".wav");
-                                    }
-                                    else {
-                                        playlist.push(levelDIR + (moveNo + 1) + ".wav");
-                                        playlist.push(levelDIR + (moveNo + 2) + ".wav");
-                                    }
-
-                                    playlist.push("games/thinx/thinx/sounds/de/quiz_n.wav");
-                                    if (level == 1) {
-                                        playlist.push("games/thinx/thinx/sounds/de/k/start_0.wav");
-                                    }
-
-                                    stopPlayback();
-                                    playAudio(playlist[currentTrackIndex]);
                                 }
                                 else {
-                                    // correct match					
-                                    display = "+";
-
-                                    playlist = [];
                                     playlist.push(levelDIR + (moveNo + 1) + ".wav");
-                                    playlist.push("games/thinx/thinx/sounds/de/p/done.wav");
-
-                                    stopPlayback();
-                                    playAudio(playlist[currentTrackIndex]);
+                                    playlist.push(levelDIR + (moveNo + 2) + ".wav");
                                 }
 
+                                playAudio(playlist[currentTrackIndex]);
                             }
                             else {
-                                // already done					
+                                // correct match					
                                 display = "+";
 
                                 playlist = [];
                                 playlist.push(levelDIR + (moveNo + 1) + ".wav");
-                                playlist.push("games/thinx/thinx/sounds/de/p/ar_done1.wav");
+                                playlist.push("games/thinx/thinx/sounds/de/p/done.wav");
 
                                 stopPlayback();
                                 playAudio(playlist[currentTrackIndex]);
                             }
                         }
                         else {
-                            // not correct					
-                            display = "-";
+
+                            // already done					
+                            display = "+";
 
                             playlist = [];
                             playlist.push(levelDIR + (moveNo + 1) + ".wav");
-                            playlist.push("games/thinx/thinx/sounds/de/pause1.wav");
-                            playlist.push("games/thinx/thinx/sounds/de/p/badpair2.wav");
+                            playlist.push("games/thinx/thinx/sounds/de/p/ar_done1.wav");
 
                             stopPlayback();
                             playAudio(playlist[currentTrackIndex]);
                         }
                     }
                     else {
-                        /// one stone	
+                        // not correct					
                         display = "-";
-                        playOneAudioFile(levelDIR + (moveNo + 1) + ".wav");
+
+                        playlist = [];
+                        playlist.push(levelDIR + (moveNo + 1) + ".wav");
+                        playlist.push("games/thinx/thinx/sounds/de/pause1.wav");
+                        playlist.push("games/thinx/thinx/sounds/de/p/badpair2.wav");
+
+                        stopPlayback();
+                        playAudio(playlist[currentTrackIndex]);
                     }
-                    break;
+                }
+                else {
+                    // one stone	               
+                    playOneAudioFile(levelDIR + (moveNo + 1) + ".wav");
                 }
             }
-        }
-        // too much stones ...
-        else {
-            for (i = 0; i < 8; i++) {
+            // too much stones ...
+            else {
+                playOneAudioFile("games/thinx/thinx/sounds/de/p/too_much.wav");
+                display = "-";
 
-                if (checkPosition(stonePos[moveNo][0] + 50, stonePos[moveNo][1] + 50, fieldPos[i][0] + 50, fieldPos[i][1] + 50)) {
-
-                    playOneAudioFile("games/thinx/thinx/sounds/de/p/too_much.wav");
-                    display = "-";
-
-                    move = false;
-                    return;
-                }
+                return;
             }
         }
     }
@@ -525,104 +583,97 @@ function endDrag() {
     // chain level 2, 5, 8, ...
     if (gameType == GameType.Sequence) {
 
-        for (i = 0; i < 8; i++) {
+        if (stoneOnField) {
 
-            if (checkPosition(stonePos[moveNo][0] + 50, stonePos[moveNo][1] + 50, fieldPos[i][0] + 50, fieldPos[i][1] + 50)) {
+            // not enough stones on the field
+            if (getCountStones(lst) != 8) {
 
-                if (lst.length != 8) {
+                playOneAudioFile(levelDIR + (moveNo + 1) + ".wav");
 
-                    console.log("not enough stones");
-                    playOneAudioFile(levelDIR + (moveNo + 1) + ".wav");
+                lst.sort();
 
-                    lst.sort();
-
-                    var ok = true;
-                    if (lst.length > 1) {
-                        for (j = 0; j < lst.length - 1; j++) {
-                            console.log("test " + lst[j]);
-                            console.log("test " + lst[j + 1]);
-                            if (lst[j] + 1 != lst[j + 1]) {
-                                ok = false;
-                            }
+                var ok = true;
+                if (getCountStones(lst) > 1) {
+                    for (j = 0; j < getCountStones(lst) - 1; j++) {
+                        console.log("test " + lst[j] + " / " + lst[j + 1]);
+                        if (lst[j] + 1 != lst[j + 1]) {
+                            ok = false;
                         }
                     }
-                    if (difficulty == 0) {
-                        if (ok) { display = "+"; }
-                        else { display = "-"; }
-                    }
-
                 }
 
-                if (lst.length == 8) {
+                // in the start round we show this on each stone
+                if (difficulty == 0) {
+                    if (ok) { display = "+"; }
+                    else { display = "-"; }
+                }
+            }
 
-                    while (lst[0] != 0) {
-                        lst = arrayRotate(lst);
+            // we have all stones
+            if (getCountStones(lst) == 8) {
+
+                while (lst[0] != 1) {
+                    lst = arrayRotate(lst);
+                }
+
+                // debug
+                for (i = 0; i < lst.length; i++) {
+                    console.log(lst[i]);
+                }
+                console.log("--------------------");
+
+                // TODO: always 8 elements?
+                if ((lst[0] == 1 && lst[1] == 2 &&
+                    lst[2] == 3 && lst[3] == 4 &&
+                    lst[4] == 5 && lst[5] == 6 &&
+                    lst[6] == 7 && lst[7] == 8) ||
+                    (lst[0] == 1 && lst[1] == 8 &&
+                        lst[2] == 7 && lst[3] == 6 &&
+                        lst[4] == 5 && lst[5] == 4 &&
+                        lst[6] == 3 && lst[7] == 2)) {
+
+                    console.log("correct order");
+
+                    gameState = GameState.Solution;
+                    display = "+";
+
+                    playlist = [];
+                    playlist.push("games/thinx/thinx/sounds/de/success3.wav");
+
+                    var solution = ks[round - 1];
+                    var sols = solution.split("|");
+                    console.log(sols)
+
+                    playlist.push(levelDIR + "tipp.wav");
+
+                    for (i = 0; i < sols.length; i++) {
+                        if (sols[i] == "%1") { playlist.push(levelDIR + "1.wav"); };
+                        if (sols[i] == "%2") { playlist.push(levelDIR + "2.wav"); };
+                        if (sols[i] == "%3") { playlist.push(levelDIR + "3.wav"); };
+                        if (sols[i] == "%4") { playlist.push(levelDIR + "4.wav"); };
+                        if (sols[i] == "%5") { playlist.push(levelDIR + "5.wav"); };
+                        if (sols[i] == "%6") { playlist.push(levelDIR + "6.wav"); };
+                        if (sols[i] == "%7") { playlist.push(levelDIR + "7.wav"); };
+                        if (sols[i] == "%8") { playlist.push(levelDIR + "8.wav"); };
+                        if (sols[i].startsWith("??")) { playlist.push(sols[i].replace("??", gamePath)); };
                     }
 
-                    // debug
-                    for (i = 0; i < lst.length; i++) {
-                        console.log(lst[i]);
-                    }
-                    console.log("--------------------");
+                    stopPlayback();
+                    playAudio(playlist[currentTrackIndex]);
+                }
+                else {
+                    // wrong order
+                    display = "-";
 
-                    // TODO: always 8 elements?
-                    if ((lst[0] == 0 && lst[1] == 1 &&
-                        lst[2] == 2 && lst[3] == 3 &&
-                        lst[4] == 4 && lst[5] == 5 &&
-                        lst[6] == 6 && lst[7] == 7) ||
-                        (lst[0] == 0 && lst[1] == 7 &&
-                            lst[2] == 6 && lst[3] == 5 &&
-                            lst[4] == 4 && lst[5] == 3 &&
-                            lst[6] == 2 && lst[7] == 1)) {
+                    playlist = [];
+                    playlist.push(levelDIR + (moveNo + 1) + ".wav");
+                    playlist.push("games/thinx/thinx/sounds/de/pause2.wav");
+                    playlist.push("games/thinx/thinx/sounds/de/k/not_so.wav");
 
-                        console.log("correct order");
+                    stopPlayback();
+                    playAudio(playlist[currentTrackIndex]);
 
-                        gameState = GameState.Solution;
-                        display = "+";
-
-                        playlist = [];
-                        playlist.push("games/thinx/thinx/sounds/de/success3.wav");
-
-                        var solution = ks[round - 1];
-                        var sols = solution.split("|");
-                        console.log(sols)
-
-                        playlist.push(levelDIR + "tipp.wav");
-
-                        for (i = 0; i < sols.length; i++) {
-                            if (sols[i] == "%1") { playlist.push(levelDIR + "1.wav"); };
-                            if (sols[i] == "%2") { playlist.push(levelDIR + "2.wav"); };
-                            if (sols[i] == "%3") { playlist.push(levelDIR + "3.wav"); };
-                            if (sols[i] == "%4") { playlist.push(levelDIR + "4.wav"); };
-                            if (sols[i] == "%5") { playlist.push(levelDIR + "5.wav"); };
-                            if (sols[i] == "%6") { playlist.push(levelDIR + "6.wav"); };
-                            if (sols[i] == "%7") { playlist.push(levelDIR + "7.wav"); };
-                            if (sols[i] == "%8") { playlist.push(levelDIR + "8.wav"); };
-                            if (sols[i].startsWith("??")) { playlist.push(sols[i].replace("??", gamePath)); };
-                        }
-
-                        playlist.push("games/thinx/thinx/sounds/de/quiz_n.wav");
-                        if (level == 2) {
-                            playlist.push("games/thinx/thinx/sounds/de/b/start_0.wav");
-                        }
-
-                        stopPlayback();
-                        playAudio(playlist[currentTrackIndex]);
-                    }
-                    else {
-                        // wrong order
-                        display = "-";
-
-                        playlist = [];
-                        playlist.push(levelDIR + (moveNo + 1) + ".wav");
-                        playlist.push("games/thinx/thinx/sounds/de/pause2.wav");
-                        playlist.push("games/thinx/thinx/sounds/de/k/not_so.wav");
-
-                        stopPlayback();
-                        playAudio(playlist[currentTrackIndex]);
-
-                        console.log("wrong order");
-                    }
+                    console.log("wrong order");
                 }
             }
         }
@@ -631,143 +682,115 @@ function endDrag() {
     // picture level 3, 6, 9, ...
     if (gameType == GameType.Picture) {
 
-        for (i = 0; i < 8; i++) {
+        if (stoneOnField) {
 
-            if (checkPosition(stonePos[moveNo][0] + 50, stonePos[moveNo][1] + 50, fieldPos[i][0] + 50, fieldPos[i][1] + 50)) {
+            // sort stones
+            lst.sort()
 
-                // TODO: amout of stones		
-                var cnt = [5, 6, 4, 5, 5, 5, 5, 5, 5, 4, 4, 5, 5, 5, 4, 5, 5, 8, 8, 8, 8, 8, 8, 8, 8];
+            // not finished yet, show hint
+            if (getCountStones(lst) < p_StonesCount[round - 1]) {
 
-                if (lst.length < cnt[round - 1]) {
-
-                    var checkOK = true;
-                    for (i = 0; i < cnt[round - 1]; i++) {
-                        if (lst[i] >= cnt[round - 1]) {
-                            checkOK = false;
-                        }
+                var checkOK = true;
+                for (i = 0; i < 8; i++) {
+                    if (lst[i] > p_StonesCount[round - 1]) {
+                        checkOK = false;
                     }
-
-                    if (difficulty == 0) {
-                        if (checkOK) {
-                            display = "+";
-                        }
-                        else {
-                            display = "-";
-                        }
-                    }
-
-                    stopPlayback();
-
-                    playOneAudioFile(levelDIR + (moveNo + 1) + ".wav");
-                    break;
                 }
 
-                if (lst.length > cnt[round - 1]) {
+                if (difficulty == 0) {
+                    if (checkOK) {
+                        display = "+";
+                    }
+                    else {
+                        display = "-";
+                    }
+                }
 
-                    display = "-";
+                stopPlayback();
+                playOneAudioFile(levelDIR + (moveNo + 1) + ".wav");
+            }
+
+            // too much stones on the fields
+            if (getCountStones(lst) > p_StonesCount[round - 1]) {
+
+                display = "-";
+
+                stopPlayback();
+
+                playlist = [];
+                playlist.push(levelDIR + (moveNo + 1) + ".wav");
+                playlist.push("games/thinx/thinx/sounds/de/pause1.wav");
+                playlist.push("games/thinx/thinx/sounds/de/b/too_much.wav");
+
+                playAudio(playlist[currentTrackIndex]);
+            }
+
+            if (getCountStones(lst) == p_StonesCount[round - 1]) {
+
+                var checkOK = true;
+                var no = 1;
+
+                for (i = 8 - p_StonesCount[round - 1]; i < 8; i++) {
+                    if (lst[i] != no) {
+                        checkOK = false;
+                    }
+                    no++;
+                }
+
+                if (checkOK) {
+
+                    display = "+";
+                    console.log("correct combination");
+
+                    gameState = GameState.Solution;
+
+                    // correct match
 
                     stopPlayback();
 
                     playlist = [];
                     playlist.push(levelDIR + (moveNo + 1) + ".wav");
-                    playlist.push("games/thinx/thinx/sounds/de/b/too_much.wav");
+                    playlist.push("games/thinx/thinx/sounds/de/all_done.wav");
+
+                    var solution = bs[round - 1];
+                    var sols = solution.split("|");
+                    console.log(sols)
+
+                    for (i = 0; i < sols.length; i++) {
+                        if (sols[i] == "%1") { playlist.push(levelDIR + "1.wav"); };
+                        if (sols[i] == "%2") { playlist.push(levelDIR + "2.wav"); };
+                        if (sols[i] == "%3") { playlist.push(levelDIR + "3.wav"); };
+                        if (sols[i] == "%4") { playlist.push(levelDIR + "4.wav"); };
+                        if (sols[i] == "%5") { playlist.push(levelDIR + "5.wav"); };
+                        if (sols[i] == "%6") { playlist.push(levelDIR + "6.wav"); };
+                        if (sols[i] == "%7") { playlist.push(levelDIR + "7.wav"); };
+                        if (sols[i] == "%8") { playlist.push(levelDIR + "8.wav"); };
+                        if (sols[i].startsWith("??")) { playlist.push(sols[i].replace("??", gamePath)); };
+                    }
 
                     playAudio(playlist[currentTrackIndex]);
-
-                    break;
                 }
+                else {
 
-                if (lst.length == cnt[round - 1]) {
+                    display = "-";
 
-                    lst = lst.sort();
+                    // wrong order
+                    console.log("wrong combination");
 
-                    // debug
-                    for (i = 0; i < lst.length; i++) {
-                        console.log(lst[i]);
-                    }
-                    console.log("--------------------");
+                    stopPlayback();
 
-                    var checkOK = true;
-                    for (i = 0; i < cnt[round - 1]; i++) {
-                        if (lst[i] != i) {
-                            checkOK = false;
-                        }
-                    }
+                    playlist = [];
+                    playlist.push(levelDIR + (moveNo + 1) + ".wav");
+                    playlist.push("games/thinx/thinx/sounds/de/pause2.wav");
+                    playlist.push("games/thinx/thinx/sounds/de/b/not_so.wav");
 
-                    if (checkOK) {
-
-                        display = "+";
-                        console.log("correct combination");
-
-                        gameState = GameState.Solution;
-
-                        // correct match
-
-                        stopPlayback();
-
-                        playlist = [];
-                        playlist.push(levelDIR + (moveNo + 1) + ".wav");
-                        playlist.push("games/thinx/thinx/sounds/de/all_done.wav");
-
-                        var solution = bs[round - 1];
-                        var sols = solution.split("|");
-                        console.log(sols)
-
-                        for (i = 0; i < sols.length; i++) {
-                            if (sols[i] == "%1") { playlist.push(levelDIR + "1.wav"); };
-                            if (sols[i] == "%2") { playlist.push(levelDIR + "2.wav"); };
-                            if (sols[i] == "%3") { playlist.push(levelDIR + "3.wav"); };
-                            if (sols[i] == "%4") { playlist.push(levelDIR + "4.wav"); };
-                            if (sols[i] == "%5") { playlist.push(levelDIR + "5.wav"); };
-                            if (sols[i] == "%6") { playlist.push(levelDIR + "6.wav"); };
-                            if (sols[i] == "%7") { playlist.push(levelDIR + "7.wav"); };
-                            if (sols[i] == "%8") { playlist.push(levelDIR + "8.wav"); };
-                            if (sols[i].startsWith("??")) { playlist.push(sols[i].replace("??", gamePath)); };
-                        }
-
-                        // next difficulty
-                        // TODO from file
-                        if (level == 6) {
-                            playlist.push("games/thinx/thinx/sounds/de/reached1.wav");
-                        }
-                        if (level == 21) {
-                            playlist.push("games/thinx/thinx/sounds/de/reached2.wav");
-                        }
-                        if (level == 51) {
-                            playlist.push("games/thinx/thinx/sounds/de/reached3.wav");
-                        }
-
-                        playlist.push("games/thinx/thinx/sounds/de/quiz_n.wav");
-
-                        playAudio(playlist[currentTrackIndex]);
-
-                        break;
-                    }
-                    else {
-
-                        display = "-";
-
-                        // wrong order
-                        console.log("wrong combination");
-
-                        stopPlayback();
-
-                        playlist = [];
-                        playlist.push(levelDIR + (moveNo + 1) + ".wav");
-                        playlist.push("games/thinx/thinx/sounds/de/pause2.wav");
-                        playlist.push("games/thinx/thinx/sounds/de/b/not_so.wav");
-
-                        playAudio(playlist[currentTrackIndex]);
-
-                        break;
-                    }
+                    playAudio(playlist[currentTrackIndex]);
                 }
 
             }
 
         }
     }
-
 }
 
 function getMousePos(canvas, evt) {
@@ -802,19 +825,34 @@ function checkPosition(sx, sy, tx, ty) {
 }
 
 function getStonesOnFields() {
-    lst = []
+
+    lst = [0, 0, 0, 0, 0, 0, 0, 0];
 
     for (i = 0; i < 8; i++) {
 
         for (j = 0; j < 8; j++) {
 
             if (checkPosition(fieldPos[i][0], fieldPos[i][1], stonePos[j][0], stonePos[j][1])) {
-                lst.push(j);
+                lst[i] = j + 1;
             }
         }
     }
 
     return lst
+}
+
+function getCountStones(lst) {
+
+    var cnt = 0;
+
+    for (i = 0; i < 8; i++) {
+        if (lst[i] != 0) {
+            cnt++;
+        }
+    }
+
+
+    return cnt;
 }
 
 function playOneAudioFile(file) {
@@ -846,6 +884,10 @@ function playNextTrack() {
 
         if (gameState == GameState.Intro) {
             gameState = GameState.Running;
+
+            if (!isRunning) {
+                startTimer();
+            }
         }
 
         if (gameState == GameState.Help) {
@@ -1067,7 +1109,7 @@ function draw() {
     }
 
     if (gameState == GameState.Running) {
-        
+
         // show mode
         if (gameType == GameType.Pair) {
             ctx.drawImage(pairsMode, 715, 10, 75, 75);

@@ -1,5 +1,8 @@
 // defination aus der Datei
 
+// TODO: amout of stones		
+var p_StonesCount = [5, 6, 4, 5, 5, 5, 5, 5, 5, 4, 4, 5, 5, 5, 4, 5, 5, 8, 8, 8, 8, 8, 8, 8, 8];
+
 // Bilder Lösungen
 var bs = [ "??b/b_01/s_00.wav",
 "??b/b_02/s_00.wav|%1|??b/b_02/s_02.wav|%2|??b/b_02/s_04.wav|%3|??b/b_02/s_06.wav|%4|??b/b_02/s_08.wav|%5|??b/b_02/s_10.wav", // Bug auf der SD Karte
