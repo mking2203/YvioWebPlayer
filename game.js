@@ -131,11 +131,14 @@ for (i = 0; i < 8; i++) {
 gameState = GameState.Start;
 
 // Retrieving the saved number from local storage
-var savedNumber = localStorage.getItem('yvioLevel_A');
+var savedNumber = +localStorage.getItem('yvioLevel_A');
+var savedTime = +localStorage.getItem('yvioLevel_A_time');
 
 // restore game to last point
 if (savedNumber != null) {
+    if (savedNumber == 0) { savedNumber = 1; };
     initLevel(savedNumber);
+    elapsedTime = savedTime;
 }
 else {
     // new game
@@ -143,7 +146,7 @@ else {
 }
 
 // init the level (debug)
-//initLevel(8);
+//initLevel(13);
 
 // ###########################################################################
 
@@ -256,12 +259,16 @@ function nextLevel() {
     if (level < 51) {
 
         level = level + 1;
-        initLevel(level);
+
+        if (level > 50) {
+            level = level;
+        }
 
         // Saving a number to local storage
         localStorage.setItem('yvioLevel_A', level);
         localStorage.setItem('yvioLevel_A_time', getElapsedTime());
 
+        initLevel(level);
         gameState = GameState.Running;
 
         difficulty = 0;
@@ -1105,7 +1112,7 @@ function draw() {
         else {
             startButton.src = "gfx/ok_3.png";
         }
-        ctx.drawImage(startButton, canvas.width / 2 - (startButton.width / 2), canvas.height - startButton.height - 10);
+        ctx.drawImage(startButton, canvas.width / 2 - (75 / 2), canvas.height - startButton.height - 10, 75, 75);
     }
 
     if (gameState == GameState.Running) {
