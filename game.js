@@ -37,17 +37,11 @@ var helpButton = new Image();
 helpButton.src = "gfx/help.png";
 
 var startButton = new Image();
-startButton.src = "gfx/ok_3.png";
-
-var pairsMode = new Image();
-pairsMode.src = "gfx/pairs.png";
-var chainMode = new Image();
-chainMode.src = "gfx/chain.png";
-var pictureMode = new Image();
-pictureMode.src = "gfx/picture.png";
+var gameMode = new Image();
 
 // hold the background
 var backg = new Image();
+backg.src = "gfx/thinx.png";
 
 // vars for drag and drop
 var move = false;
@@ -108,8 +102,6 @@ audioPlayer.addEventListener('ended', function () {
     playNextTrack();
 });
 
-backg.src = "gfx/thinx.png";
-
 var fields = [];
 var stones = [];
 
@@ -159,6 +151,19 @@ function handleDownEvent(mousecoords) {
             return;
         }
 
+        if (checkPosition(mousecoords.x, mousecoords.y, 50, canvas.height - 50)) {
+            const response = confirm("Neues Spiel starten?");
+
+            if (response) {
+                // new game
+                initLevel(1);
+                // reset timer
+                resetTimer();
+                startTimer();
+            } 
+            return;
+        }
+
         if (!move) {
             startDrag(mousecoords.x, mousecoords.y)
             return;
@@ -198,7 +203,6 @@ function handleDownEvent(mousecoords) {
 
                     nextLevel();
                     gameState = GameState.Running;
-
                 }
 
                 //start the time if paused
@@ -1000,15 +1004,15 @@ function draw() {
         }
     }
 
-    // draw help
+    
     if (gameState == GameState.Running) {
+        // draw help
         ctx.drawImage(helpButton, 10, 10, 75, 75);
+        // draw play
+        ctx.drawImage(playButton, 10, canvas.height - 85, 75, 75);
     }
 
-    // draw play
-    ctx.drawImage(playButton, 10, canvas.height - 85, 75, 75);
-
-    // draw led
+    // draw led field
     var topX = canvas.width / 2 - 55;
     var topY = canvas.height / 2 - 55;
 
@@ -1119,14 +1123,15 @@ function draw() {
 
         // show mode
         if (gameType == GameType.Pair) {
-            ctx.drawImage(pairsMode, 715, 10, 75, 75);
+            gameMode.src = "gfx/pairs.png";
         }
         if (gameType == GameType.Sequence) {
-            ctx.drawImage(chainMode, 715, 10, 75, 75);
+            gameMode.src = "gfx/chain.png";
         }
         if (gameType == GameType.Picture) {
-            ctx.drawImage(pictureMode, 715, 10, 75, 75);
+            gameMode.src = "gfx/picture.png";
         }
+        ctx.drawImage(gameMode, 715, 10, 75, 75);
     }
 
     // draw fields
