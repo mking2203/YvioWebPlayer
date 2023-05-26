@@ -1105,6 +1105,7 @@ function draw() {
                 var no = 0
                 if (display[0] == "-") { no = 39; }
                 if (display[0] == "+") { no = 33; }
+                if (display[0] == "0") { no = 48; }
                 if (display[0] == "1") { no = 51; }
                 if (display[0] == "2") { no = 54; }
                 if (display[0] == "3") { no = 57; }
@@ -1133,6 +1134,7 @@ function draw() {
                 no = 0
                 if (display[1] == "-") { no = 39; }
                 if (display[1] == "+") { no = 33; }
+                if (display[1] == "0") { no = 48; }
                 if (display[1] == "1") { no = 51; }
                 if (display[1] == "2") { no = 54; }
                 if (display[1] == "3") { no = 57; }
