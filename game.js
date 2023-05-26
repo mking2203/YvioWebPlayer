@@ -32,6 +32,8 @@ var display = "";
 
 var playButton = new Image();
 playButton.src = "gfx/play.png";
+var pauseButton = new Image();
+pauseButton.src = "gfx/pause.png";
 
 var helpButton = new Image();
 helpButton.src = "gfx/help.png";
@@ -131,14 +133,17 @@ if (savedNumber != null) {
     if (savedNumber == 0) { savedNumber = 1; };
     initLevel(savedNumber);
     elapsedTime = savedTime;
+
+    display = savedNumber.toString();
 }
 else {
     // new game
     initLevel(1);
+    display = "1";
 }
 
 // init the level (debug)
-//initLevel(13);
+//initLevel(36);
 
 // ###########################################################################
 
@@ -151,6 +156,7 @@ function handleDownEvent(mousecoords) {
             return;
         }
 
+        // check for play button
         if (checkPosition(mousecoords.x, mousecoords.y, 50, canvas.height - 50)) {
             const response = confirm("Neues Spiel starten?");
 
@@ -160,13 +166,27 @@ function handleDownEvent(mousecoords) {
                 // reset timer
                 resetTimer();
                 startTimer();
-            } 
+            }
             return;
+        }
+
+        // check for pause button
+        if (checkPosition(mousecoords.x, mousecoords.y, 160, canvas.height - 50)) {
+            gameState = GameState.Pause;
+            pauseTimer();
         }
 
         if (!move) {
             startDrag(mousecoords.x, mousecoords.y)
             return;
+        }
+    }
+
+    if (gameState == GameState.Pause) {
+        // check for pause button
+        if (checkPosition(mousecoords.x, mousecoords.y, 120, canvas.height - 50)) {
+            gameState = GameState.Running;
+            startTimer();
         }
     }
 
@@ -322,6 +342,8 @@ function nextLevel() {
         }
 
         playAudio(playlist[currentTrackIndex]);
+
+        display = level.toString();
     }
 }
 
@@ -1004,19 +1026,25 @@ function draw() {
         }
     }
 
-    
+    // draw play and help button
     if (gameState == GameState.Running) {
         // draw help
         ctx.drawImage(helpButton, 10, 10, 75, 75);
         // draw play
         ctx.drawImage(playButton, 10, canvas.height - 85, 75, 75);
+
+    }
+    // draw pause button
+    if (gameState == GameState.Running || gameState == GameState.Pause) {
+        // draw pause
+        ctx.drawImage(pauseButton, 120, canvas.height - 85, 75, 75);
     }
 
     // draw led field
     var topX = canvas.width / 2 - 55;
     var topY = canvas.height / 2 - 55;
 
-    // background led
+    // background led area
     ctx.beginPath();
     ctx.fillStyle = 'white';
     ctx.arc(topX + 55, topY + 55, 110, 0, 2 * Math.PI);
@@ -1029,19 +1057,109 @@ function draw() {
     ctx.fill();
     ctx.stroke();
 
+    // draw led's
     topX = canvas.width / 2 - 75;
     topY = canvas.height / 2 - 75;
 
-    for (var i = 0; i < 12; i++) {
-        for (var j = 0; j < 12; j++) {
+    for (var i = 0; i < 12; i++) { // vertical
+        for (var j = 0; j < 12; j++) { // horizontal
 
-            var val;
+            var val = 0;
 
-            val = ascii[0][j];
+            // single display
+            if (display.length == 1) {
 
-            if (display == "-") { val = ascii[1][j]; }
-            if (display == "+") { val = ascii[2][j]; }
+                var no = 0
+                if (display == "-") { no = 39; }
+                if (display == "+") { no = 33; }
+                if (display == "1") { no = 51; }
+                if (display == "2") { no = 54; }
+                if (display == "3") { no = 57; }
+                if (display == "4") { no = 60; }
+                if (display == "5") { no = 63; }
+                if (display == "6") { no = 66; }
+                if (display == "7") { no = 69; }
+                if (display == "8") { no = 72; }
+                if (display == "9") { no = 75; }
 
+                if (no != 0) {
+                    var val1 = [];
+
+                    for (var i1 = 0; i1 < 3; i1++) {
+                        val1.push((asciiArray[no + i1] & 0x3f80) >> 7);
+                        val1.push(asciiArray[no + i1] & 0x007f);
+                    }
+                    for (var i1 = 0; i1 < 6; i1++) {
+                        val1[i1] = val1[i1] << 3;
+                    }
+
+                    if (j >= 3 && j < 9) {
+                        val = val1[j - 3];
+                    }
+                }
+            }
+
+            // two digit display
+            if (display.length == 2) {
+
+                var no = 0
+                if (display[0] == "-") { no = 39; }
+                if (display[0] == "+") { no = 33; }
+                if (display[0] == "1") { no = 51; }
+                if (display[0] == "2") { no = 54; }
+                if (display[0] == "3") { no = 57; }
+                if (display[0] == "4") { no = 60; }
+                if (display[0] == "5") { no = 63; }
+                if (display[0] == "6") { no = 66; }
+                if (display[0] == "7") { no = 69; }
+                if (display[0] == "8") { no = 72; }
+                if (display[0] == "9") { no = 75; }
+
+                if (no != 0) {
+                    var val1 = [];
+
+                    for (var i1 = 0; i1 < 3; i1++) {
+                        val1.push((asciiArray[no + i1] & 0x3f80) >> 7);
+                        val1.push(asciiArray[no + i1] & 0x007f);
+                    }
+                    for (var i1 = 0; i1 < 6; i1++) {
+                        val1[i1] = val1[i1] << 3;
+                    }
+                    if (j >= 1 && j < 7) {
+                        val = val1[j - 1];
+                    }
+                }
+
+                no = 0
+                if (display[1] == "-") { no = 39; }
+                if (display[1] == "+") { no = 33; }
+                if (display[1] == "1") { no = 51; }
+                if (display[1] == "2") { no = 54; }
+                if (display[1] == "3") { no = 57; }
+                if (display[1] == "4") { no = 60; }
+                if (display[1] == "5") { no = 63; }
+                if (display[1] == "6") { no = 66; }
+                if (display[1] == "7") { no = 69; }
+                if (display[1] == "8") { no = 72; }
+                if (display[1] == "9") { no = 75; }
+
+                if (no != 0) {
+                    var val1 = [];
+
+                    for (var i1 = 0; i1 < 3; i1++) {
+                        val1.push((asciiArray[no + i1] & 0x3f80) >> 7);
+                        val1.push(asciiArray[no + i1] & 0x007f);
+                    }
+                    for (var i1 = 0; i1 < 6; i1++) {
+                        val1[i1] = val1[i1] << 3;
+                    }
+                    if (j >= 6 && j < 12) {
+                        val = val1[j - 6];
+                    }
+                }
+            }
+
+            // take out missing led's
             if (i == 0 && j == 0) { continue; }
             if (i == 0 && j == 1) { continue; }
             if (i == 0 && j == 2) { continue; }
@@ -1098,12 +1216,13 @@ function draw() {
                 ctx.fillStyle = 'grey';
             }
 
-            ctx.arc(topX + (i * 14), topY + (j * 14), 6, 0, 2 * Math.PI);
+            ctx.arc(topX + (j * 14), topY + (i * 14), 6, 0, 2 * Math.PI);
             ctx.fill();
             ctx.stroke();
         }
     }
 
+    // show ok button
     if (gameState == GameState.Start ||
         gameState == GameState.Intro ||
         gameState == GameState.Help ||
@@ -1119,9 +1238,8 @@ function draw() {
         ctx.drawImage(startButton, canvas.width / 2 - (75 / 2), canvas.height - startButton.height - 10, 75, 75);
     }
 
+    // show mode
     if (gameState == GameState.Running) {
-
-        // show mode
         if (gameType == GameType.Pair) {
             gameMode.src = "gfx/pairs.png";
         }
@@ -1157,6 +1275,7 @@ function draw() {
 
     secs = secs - (mins * 60);
 
+    // draw time info
     if (gameState == GameState.Running) {
 
         ctx.font = "30px Arial";
@@ -1170,6 +1289,7 @@ function draw() {
         ctx.fillText("Level " + level + " - Time " + tm, canvas.width / 2, 30);
     }
 
+    //draw difficulty
     ctx.font = "18px Arial";
     ctx.fillStyle = "white";
     ctx.textAlign = "center";
@@ -1185,7 +1305,6 @@ function draw() {
         diff = "Einfach";
     }
     ctx.fillText(diff, canvas.width - 60, canvas.height - 20);
-
 }
 
 setInterval(draw, 10);

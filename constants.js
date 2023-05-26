@@ -19,7 +19,8 @@ const GameState = {
     Intro: 1,
     Running: 2,
     Solution: 3,
-    Help: 4
+    Help: 4,
+    Pause: 5
 }
 
 // ### some declaration ###
