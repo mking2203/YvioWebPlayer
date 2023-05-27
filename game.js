@@ -13,7 +13,7 @@ let elapsedTime = 0; // Variable to store the elapsed time
 let isRunning = false; // Variable to indicate whether the timer is currently running
 
 // data
-var level = 1;
+var level = 0;
 var gameType = GameType.Pair;
 var round = 1;
 var difficulty = Difficulty.Introduce; // TODO from file
@@ -143,7 +143,7 @@ else {
 }
 
 // init the level (debug)
-//initLevel(36);
+//initLevel(6);
 
 // ###########################################################################
 
@@ -158,16 +158,20 @@ function handleDownEvent(mousecoords) {
 
         // check for play button
         if (checkPosition(mousecoords.x, mousecoords.y, 50, canvas.height - 50)) {
+
+            stopPlayback();
             const response = confirm("Neues Spiel starten?");
 
             if (response) {
                 // new game
                 initLevel(1);
+                display = "1";
                 // reset timer
                 resetTimer();
-                startTimer();
-            }
-            return;
+
+                gameState = GameState.Start;
+                return;
+            }        
         }
 
         // check for pause button
@@ -210,6 +214,10 @@ function handleDownEvent(mousecoords) {
 
                 // stop the intro
                 if (gameState == GameState.Intro) {
+
+                    level = level - 1;
+                    nextLevel();
+
                     gameState = GameState.Running;
 
                     startTimer();
@@ -314,23 +322,10 @@ function nextLevel() {
 
         playlist = [];
 
+        // here comes the next
         playlist.push("games/thinx/thinx/sounds/de/quiz_n.wav");
 
-        if (level == 2) {
-            playlist.push("games/thinx/thinx/sounds/de/k/start_0.wav");
-        }
-        if (level == 3) {
-            playlist.push("games/thinx/thinx/sounds/de/b/start_0.wav");
-        }
-
-        if (gameType == GameType.Picture) {
-            if (p_StonesCount[round - 1] == 4) { playlist.push("games/thinx/thinx/sounds/de/b/help_c4.wav"); };
-            if (p_StonesCount[round - 1] == 5) { playlist.push("games/thinx/thinx/sounds/de/b/help_c5.wav"); };
-            if (p_StonesCount[round - 1] == 6) { playlist.push("games/thinx/thinx/sounds/de/b/help_c6.wav"); };
-            if (p_StonesCount[round - 1] == 7) { playlist.push("games/thinx/thinx/sounds/de/b/help_c7.wav"); };
-            if (p_StonesCount[round - 1] == 8) { playlist.push("games/thinx/thinx/sounds/de/b/help_c8.wav"); };
-        }
-
+        // if stage reached
         if (level == 7) {
             playlist.push("games/thinx/thinx/sounds/de/reached1.wav");
         }
@@ -340,6 +335,66 @@ function nextLevel() {
         if (level == 52) {
             playlist.push("games/thinx/thinx/sounds/de/reached3.wav");
         }
+
+        // for pairs
+        if (gameType == GameType.Pair) {
+            if (difficulty == Difficulty.Introduce) {
+                playlist.push("games/thinx/thinx/sounds/de/p/start_0.wav");
+            }
+            if (difficulty == Difficulty.Easy) {
+                playlist.push("games/thinx/thinx/sounds/de/p/start_1.wav");
+            }
+            if (difficulty == Difficulty.Medium) {
+                playlist.push("games/thinx/thinx/sounds/de/p/start_2.wav");
+            }
+            if (difficulty == Difficulty.Hard) {
+                playlist.push("games/thinx/thinx/sounds/de/p/start_3.wav");
+            }
+        }
+
+        // for sequence
+        if (gameType == GameType.Sequence) {
+            if (difficulty == Difficulty.Introduce) {
+                playlist.push("games/thinx/thinx/sounds/de/k/start_0.wav");
+            }
+            if (difficulty == Difficulty.Easy) {
+                playlist.push("games/thinx/thinx/sounds/de/k/start_1.wav");
+            }
+            if (difficulty == Difficulty.Medium) {
+                playlist.push("games/thinx/thinx/sounds/de/k/start_2.wav");
+            }
+            if (difficulty == Difficulty.Hard) {
+                playlist.push("games/thinx/thinx/sounds/de/k/start_3.wav");
+            }
+        }
+
+        // for pictures
+        if (gameType == GameType.Picture) {
+            if (difficulty == Difficulty.Introduce) {
+                playlist.push("games/thinx/thinx/sounds/de/b/start_0.wav");
+            }
+            if (difficulty == Difficulty.Easy) {
+                playlist.push("games/thinx/thinx/sounds/de/b/start_1.wav");
+            }
+            if (difficulty == Difficulty.Medium) {
+                playlist.push("games/thinx/thinx/sounds/de/b/start_2.wav");
+            }
+            if (difficulty == Difficulty.Hard) {
+                playlist.push("games/thinx/thinx/sounds/de/b/start_3.wav");
+            }
+        }
+
+        if (level > 6) {
+            if (gameType == GameType.Picture) {
+                if (p_StonesCount[round - 1] == 4) { playlist.push("games/thinx/thinx/sounds/de/b/help_c4.wav"); };
+                if (p_StonesCount[round - 1] == 5) { playlist.push("games/thinx/thinx/sounds/de/b/help_c5.wav"); };
+                if (p_StonesCount[round - 1] == 6) { playlist.push("games/thinx/thinx/sounds/de/b/help_c6.wav"); };
+                if (p_StonesCount[round - 1] == 7) { playlist.push("games/thinx/thinx/sounds/de/b/help_c7.wav"); };
+                if (p_StonesCount[round - 1] == 8) { playlist.push("games/thinx/thinx/sounds/de/b/help_c8.wav"); };
+            }
+        }
+
+
 
         playAudio(playlist[currentTrackIndex]);
 
@@ -557,6 +612,7 @@ function endDrag() {
                                     playlist.push(levelDIR + (moveNo + 1) + ".wav");
                                     playlist.push(levelDIR + (moveNo + 2) + ".wav");
                                 }
+                                playlist.push(levelDIR + "tipp.wav");
 
                                 playAudio(playlist[currentTrackIndex]);
                             }
@@ -567,6 +623,15 @@ function endDrag() {
                                 playlist = [];
                                 playlist.push(levelDIR + (moveNo + 1) + ".wav");
                                 playlist.push("games/thinx/thinx/sounds/de/p/done.wav");
+
+                                if (moveNo % 2) {
+                                    playlist.push(levelDIR + (moveNo) + ".wav");
+                                    playlist.push(levelDIR + (moveNo + 1) + ".wav");
+                                }
+                                else {
+                                    playlist.push(levelDIR + (moveNo + 1) + ".wav");
+                                    playlist.push(levelDIR + (moveNo + 2) + ".wav");
+                                }
 
                                 stopPlayback();
                                 playAudio(playlist[currentTrackIndex]);
@@ -625,6 +690,7 @@ function endDrag() {
 
                 lst.sort();
 
+                // TODO: find a good solution to show if correct even e.g. two stones on the board
                 var ok = true;
                 if (getCountStones(lst) > 1) {
                     for (j = 0; j < getCountStones(lst) - 1; j++) {
@@ -784,6 +850,8 @@ function endDrag() {
                     playlist = [];
                     playlist.push(levelDIR + (moveNo + 1) + ".wav");
                     playlist.push("games/thinx/thinx/sounds/de/all_done.wav");
+
+                    playlist.push(levelDIR + "tipp.wav");
 
                     var solution = bs[round - 1];
                     var sols = solution.split("|");
@@ -1212,7 +1280,7 @@ function draw() {
             ctx.beginPath();
 
             if (getBit(val, i)) {
-                ctx.fillStyle = 'orange';
+                ctx.fillStyle = '#FFEB3B';
             }
             else {
                 ctx.fillStyle = 'grey';

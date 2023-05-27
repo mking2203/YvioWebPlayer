@@ -5,7 +5,7 @@ var p_StonesCount = [5, 6, 4, 5, 5, 5, 5, 5, 5, 4, 4, 5, 5, 5, 4, 5, 5, 8, 8, 8,
 
 // Bilder Lösungen
 var bs = ["??b/b_01/s_00.wav",
-    "??b/b_02/s_00.wav|%1|??b/b_02/s_02.wav|%2|??b/b_02/s_04.wav|%3|??b/b_02/s_06.wav|%4|??b/b_02/s_08.wav|%5|??b/b_02/s_10.wav", // Bug auf der SD Karte
+    "??b/b_02/s_00.wav|%1|??b/b_02/s_02.wav|%2|??b/b_02/s_04.wav|%3|??b/b_02/s_06.wav|%4|??b/b_02/s_08.wav|%5|??b/b_02/s_10.wav|%6", // Bug auf der SD Karte
     "??b/b_03/s_00.wav|%1|??b/b_03/s_02.wav|%2|??b/b_03/s_04.wav|%3|??b/b_03/s_06.wav|%4",
     "??b/b_04/tipp.wav|%1|%2|%3|%4|%5", // Bug auf der SD Karte
     "??b/b_05/s_00.wav|%1|??b/b_05/s_02.wav|%2|??b/b_05/s_04.wav|%3|??b/b_05/s_06.wav|%4|??b/b_05/s_08.wav|%5",
