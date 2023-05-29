@@ -143,7 +143,7 @@ else {
 }
 
 // init the level (debug)
-//initLevel(6);
+//initLevel(52);
 
 // ###########################################################################
 
@@ -171,7 +171,7 @@ function handleDownEvent(mousecoords) {
 
                 gameState = GameState.Start;
                 return;
-            }        
+            }
         }
 
         // check for pause button
@@ -288,13 +288,9 @@ function initLevel(selectLevel) {
 
 function nextLevel() {
     // fehlende Logik, hier ist erstmal Schluss!
-    if (level < 51) {
+    if (level < 52) {
 
         level = level + 1;
-
-        if (level > 50) {
-            level = level;
-        }
 
         // Saving a number to local storage
         localStorage.setItem('yvioLevel_A', level);
@@ -394,10 +390,7 @@ function nextLevel() {
             }
         }
 
-
-
         playAudio(playlist[currentTrackIndex]);
-
         display = level.toString();
     }
 }
@@ -547,12 +540,17 @@ function endDrag() {
 
     // moveNo is the actual stone, now check if stone has placed
     var stoneOnField = false;
+    var stonePlaced = 0;
+    var sector = 0;
 
     for (i = 0; i < 8; i++) {
 
         if (checkPosition(stonePos[moveNo][0] + 50, stonePos[moveNo][1] + 50, fieldPos[i][0] + 50, fieldPos[i][1] + 50)) {
             console.log("Stone " + (moveNo + 1) + " has been placed on field " + (i + 1));
             stoneOnField = true;
+
+            stonePlaced = i + 1;
+            sector = Math.floor((stonePlaced + 1) / 2);
         }
     }
 
@@ -570,7 +568,8 @@ function endDrag() {
     }
 
     console.log("--------------------");
-    console.log("Level " + level + " / Round " + round);
+    console.log("Level: " + level + " / Round: " + round);
+    console.log("Difficulty: " + difficulty);
 
     // pairs level 1,4,...
     if (gameType == GameType.Pair) {
@@ -585,12 +584,12 @@ function endDrag() {
 
                 // correct count of stones
                 if (getCountStones(lst) == 2) {
-                    if ((lst[6] == 1 && lst[7] == 2) ||
-                        (lst[6] == 3 && lst[7] == 4) ||
-                        (lst[6] == 5 && lst[7] == 6) ||
-                        (lst[6] == 7 && lst[7] == 8)) {
 
+                    if (checkPairOK()) {
+
+                        // correct match
                         if (solvedPair[(lst[7] / 2) - 1] == false) {
+
                             solvedPair[(lst[7] / 2) - 1] = true;
                             if (solvedPair[0] && solvedPair[1] && solvedPair[2] && solvedPair[3]) {
 
@@ -612,11 +611,11 @@ function endDrag() {
                                     playlist.push(levelDIR + (moveNo + 1) + ".wav");
                                     playlist.push(levelDIR + (moveNo + 2) + ".wav");
                                 }
-                                playlist.push(levelDIR + "tipp.wav");
 
                                 playAudio(playlist[currentTrackIndex]);
                             }
                             else {
+
                                 // correct match					
                                 display = "+";
 
@@ -655,7 +654,32 @@ function endDrag() {
                         display = "-";
 
                         playlist = [];
-                        playlist.push(levelDIR + (moveNo + 1) + ".wav");
+
+                        // up to difficuty medium	
+                        if (difficulty < Difficulty.Hard) {
+                            playlist.push(levelDIR + (moveNo + 1) + ".wav");
+                        }
+                        else {
+                            // hard - we need to play different sounds
+                            // one stone in sector 1/3 and the other in 2/4
+                            if (sector == 1 || sector == 3) {
+                                if (moveNo % 2) {
+                                    playlist.push(levelDIR + (moveNo + 1) + ".wav");
+                                }
+                                else {
+                                    playlist.push(levelDIR + (moveNo + 9) + ".wav");
+                                }
+                            }
+                            else {
+                                if (moveNo % 2) {
+                                    playlist.push(levelDIR + (moveNo + 9) + ".wav");
+                                }
+                                else {
+                                    playlist.push(levelDIR + (moveNo + 1) + ".wav");
+                                }
+                            }
+                        }
+
                         playlist.push("games/thinx/thinx/sounds/de/pause1.wav");
                         playlist.push("games/thinx/thinx/sounds/de/p/badpair2.wav");
 
@@ -664,8 +688,32 @@ function endDrag() {
                     }
                 }
                 else {
-                    // one stone	               
-                    playOneAudioFile(levelDIR + (moveNo + 1) + ".wav");
+                    // one stone
+
+                    // up to difficuty medium	
+                    if (difficulty < Difficulty.Hard) {
+                        playOneAudioFile(levelDIR + (moveNo + 1) + ".wav");
+                    }
+                    else {
+                        // hard - we need to play different sounds
+                        // one stone in sector 1/3 and the other in 2/4
+                        if (sector == 1 || sector == 3) {
+                            if (moveNo % 2) {
+                                playOneAudioFile(levelDIR + (moveNo + 1) + ".wav");
+                            }
+                            else {
+                                playOneAudioFile(levelDIR + (moveNo + 9) + ".wav");
+                            }
+                        }
+                        else {
+                            if (moveNo % 2) {
+                                playOneAudioFile(levelDIR + (moveNo + 9) + ".wav");
+                            }
+                            else {
+                                playOneAudioFile(levelDIR + (moveNo + 1) + ".wav");
+                            }
+                        }
+                    }
                 }
             }
             // too much stones ...
@@ -894,6 +942,38 @@ function endDrag() {
     }
 }
 
+function checkPairOK() {
+
+    if (difficulty < Difficulty.Hard) {
+
+        var tmp = getStonesOnFields();
+        tmp.sort();
+
+        if ((tmp[6] == 1 && tmp[7] == 2) ||
+            (tmp[6] == 3 && tmp[7] == 4) ||
+            (tmp[6] == 5 && tmp[7] == 6) ||
+            (tmp[6] == 7 && tmp[7] == 8)) {
+            return true;
+        }
+    }
+    else {
+        // level hard
+        var tmp = getStonesOnSectors();
+
+        if ((tmp[0] == 2 && tmp[1] == 1) ||
+            (tmp[2] == 2 && tmp[3] == 1) ||
+            (tmp[0] == 4 && tmp[1] == 3) ||
+            (tmp[2] == 4 && tmp[3] == 3) ||
+            (tmp[0] == 6 && tmp[1] == 5) ||
+            (tmp[2] == 6 && tmp[3] == 5) ||
+            (tmp[0] == 8 && tmp[1] == 7) ||
+            (tmp[2] == 8 && tmp[3] == 7)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 function getMousePos(canvas, evt) {
 
     var valX = evt.clientX - canvas.offsetLeft;
@@ -927,7 +1007,7 @@ function checkPosition(sx, sy, tx, ty) {
 
 function getStonesOnFields() {
 
-    lst = [0, 0, 0, 0, 0, 0, 0, 0];
+    var lst = [0, 0, 0, 0, 0, 0, 0, 0];
 
     for (i = 0; i < 8; i++) {
 
@@ -935,6 +1015,24 @@ function getStonesOnFields() {
 
             if (checkPosition(fieldPos[i][0], fieldPos[i][1], stonePos[j][0], stonePos[j][1])) {
                 lst[i] = j + 1;
+            }
+        }
+    }
+
+    return lst
+}
+
+function getStonesOnSectors() {
+
+    // for pairs in hard level
+    var lst = [0, 0, 0, 0];
+
+    for (i = 0; i < 8; i++) {
+
+        for (j = 0; j < 8; j++) {
+
+            if (checkPosition(fieldPos[i][0], fieldPos[i][1], stonePos[j][0], stonePos[j][1])) {
+                lst[Math.floor(i / 2)] = j + 1;
             }
         }
     }
