@@ -143,7 +143,7 @@ else {
 }
 
 // init the level (debug)
-//initLevel(52);
+//initLevel(2);
 
 // ###########################################################################
 
@@ -492,6 +492,11 @@ function arrayRotate(arr) {
     return arr;
 }
 
+function arrayRotateRight(arr) {
+    arr.unshift(arr.pop());
+    return arr
+}
+
 function setStones() {
     // calculate the inital stone position
     var radius = 175;
@@ -736,22 +741,9 @@ function endDrag() {
 
                 playOneAudioFile(levelDIR + (moveNo + 1) + ".wav");
 
-                lst.sort();
-
-                // TODO: find a good solution to show if correct even e.g. two stones on the board
-                var ok = true;
-                if (getCountStones(lst) > 1) {
-                    for (j = 0; j < getCountStones(lst) - 1; j++) {
-                        console.log("test " + lst[j] + " / " + lst[j + 1]);
-                        if (lst[j] + 1 != lst[j + 1]) {
-                            ok = false;
-                        }
-                    }
-                }
-
                 // in the start round we show this on each stone
                 if (difficulty == 0) {
-                    if (ok) { display = "+"; }
+                    if (checkSequenceOK(lst)) { display = "+"; }
                     else { display = "-"; }
                 }
             }
@@ -759,25 +751,7 @@ function endDrag() {
             // we have all stones
             if (getCountStones(lst) == 8) {
 
-                while (lst[0] != 1) {
-                    lst = arrayRotate(lst);
-                }
-
-                // debug
-                for (i = 0; i < lst.length; i++) {
-                    console.log(lst[i]);
-                }
-                console.log("--------------------");
-
-                // TODO: always 8 elements?
-                if ((lst[0] == 1 && lst[1] == 2 &&
-                    lst[2] == 3 && lst[3] == 4 &&
-                    lst[4] == 5 && lst[5] == 6 &&
-                    lst[6] == 7 && lst[7] == 8) ||
-                    (lst[0] == 1 && lst[1] == 8 &&
-                        lst[2] == 7 && lst[3] == 6 &&
-                        lst[4] == 5 && lst[5] == 4 &&
-                        lst[6] == 3 && lst[7] == 2)) {
+                if (checkSequenceOK(lst)) {
 
                     console.log("correct order");
 
@@ -971,6 +945,66 @@ function checkPairOK() {
             return true;
         }
     }
+    return false;
+}
+
+function checkSequenceOK(tst) {
+
+    let check = false;
+    let cnt = 0;
+
+    // shift to left until a number is found
+    while (tst[0] == 0) {
+        arrayRotate(tst);
+    }
+
+    // copy for two checks
+    let nor = [0, 0, 0, 0, 0, 0, 0, 0];
+    let inv = [0, 0, 0, 0, 0, 0, 0, 0];
+
+    for (i = 0; i < 8; i++) {
+        nor[i] = tst[i];
+        inv[i] = tst[i];
+    }
+
+    // normal rotation
+
+    // shift to right according the first number
+    cnt = nor[0] - 1;
+    for (i = 0; i < cnt; i++) {
+        arrayRotateRight(nor);
+    }
+    // check if all numers in the correct order
+    check = true;
+    for (i = 0; i < 8; i++) {
+        if (nor[i] != 0) {
+            if (nor[i] != i + 1) {
+                check = false;
+            }
+        }
+    }
+
+    if (check) { return true; }
+
+    // invers rotation
+
+    // shift to right according the first number
+    cnt = 8 - inv[0];
+    for (i = 0; i < cnt; i++) {
+        arrayRotateRight(inv);
+    }
+    // check if all numers in the correct order
+    check = true;
+    for (i = 0; i < 8; i++) {
+        if (inv[i] != 0) {
+            if (inv[i] != 8 - i) {
+                check = false;
+            }
+        }
+    }
+
+    if (check) { return true; }
+
     return false;
 }
 
