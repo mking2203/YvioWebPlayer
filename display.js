@@ -15,7 +15,7 @@ var oneChar = [0b000000000000,
 				
 ascii.push(oneChar);
 
-var oneChar = [0b000000000000,
+oneChar = [0b000000000000,
 				0b000000000000,
 				0b000000000000,
 				0b000000000000,
@@ -30,7 +30,7 @@ var oneChar = [0b000000000000,
 				
 ascii.push(oneChar);
 
-var oneChar = [0b000000000000,
+oneChar = [0b000000000000,
 				0b000001100000,
 				0b000001100000,
 				0b000001100000,
