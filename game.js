@@ -18,6 +18,7 @@ var gameType = GameType.Pair;
 var round = 1;
 var difficulty = Difficulty.Introduce; // TODO from file
 var gameState = GameState.Start;
+var saveMode = "save"; // save oder load
 
 var solvedPair = [false, false, false, false];
 var helpCounter = 0;
@@ -44,6 +45,18 @@ var gameMode = new Image();
 // hold the background
 var backg = new Image();
 backg.src = "gfx/thinx.png";
+
+// holds the stone position
+var stonePos = [
+    [0, 0],
+    [0, 0],
+    [0, 0],
+    [0, 0],
+    [0, 0],
+    [0, 0],
+    [0, 0],
+    [0, 0]
+];
 
 // vars for drag and drop
 var move = false;
@@ -179,6 +192,19 @@ function handleDownEvent(mousecoords) {
             gameState = GameState.Pause;
             pauseTimer();
         }
+
+        // Load Button
+        if (checkPosition(mousecoords.x, mousecoords.y, canvas.width - 150, 30)) {
+            openSavePopup("load");
+            return;
+        }
+
+        // Save Button
+        if (checkPosition(mousecoords.x, mousecoords.y, canvas.width - 150, 80)) {
+            openSavePopup("save");
+            return;
+        }
+
 
         if (!move) {
             startDrag(mousecoords.x, mousecoords.y)
@@ -1190,6 +1216,86 @@ function getElapsedTime() {
     return totalElapsed;
 }
 
+function openSavePopup(mode) {
+    saveMode = mode;
+    document.getElementById("savePopup").style.display = "flex";
+    updateSaveSlots();
+}
+
+function closeSavePopup() {
+    document.getElementById("savePopup").style.display = "none";
+}
+
+function updateSaveSlots() {
+    const container = document.getElementById("saveSlots");
+    container.innerHTML = "";
+
+    const slots = ["A","B","C","D","E","F","G","H"];
+
+    slots.forEach(slot => {
+
+        const keyLevel = "yvioLevel_" + slot;
+        const keyTime = "yvioLevel_" + slot + "_time";
+
+        let txt = "Leer";
+
+        const lvl = localStorage.getItem(keyLevel);
+        const t = localStorage.getItem(keyTime);
+
+        if (lvl) {
+            txt = "Level " + lvl + " | Zeit " + formatTime(t);
+        }
+
+        const btn = document.createElement("button");
+        btn.style.width = "100%";
+        btn.style.margin = "4px";
+
+        btn.innerHTML = slot + ": " + txt;
+
+        btn.onclick = () => {
+            if (saveMode === "save") {
+                saveToSlot(slot);
+            } else {
+                loadFromSlot(slot);
+            }
+            closeSavePopup();
+        };
+
+        container.appendChild(btn);
+    });
+}
+
+function formatTime(ms) {
+    if (!ms) return "0:00";
+
+    const sec = Math.floor(ms / 1000);
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+
+    return m + ":" + s.toString().padStart(2,"0");
+}
+
+function saveToSlot(slot) {
+    localStorage.setItem("yvioLevel_" + slot, level);
+    localStorage.setItem("yvioLevel_" + slot + "_time", getElapsedTime());
+}
+
+function loadFromSlot(slot) {
+
+    const lvl = localStorage.getItem("yvioLevel_" + slot);
+    const t = localStorage.getItem("yvioLevel_" + slot + "_time");
+
+    if (!lvl) {
+        alert("Leer");
+        return;
+    }
+
+    initLevel(parseInt(lvl));
+    elapsedTime = parseInt(t) || 0;
+
+    display = lvl.toString();
+}
+
 // ###########################################################################	
 
 function draw() {
@@ -1239,6 +1345,18 @@ function draw() {
         // draw pause
         ctx.drawImage(pauseButton, 120, canvas.height - 85, 75, 75);
     }
+
+    // draw load Button
+    ctx.fillStyle = "white";
+    ctx.fillRect(canvas.width - 190, 10, 80, 40);
+    ctx.fillStyle = "black";
+    ctx.fillText("LOAD", canvas.width - 150, 35);
+
+    // draw save Button
+    ctx.fillStyle = "white";
+    ctx.fillRect(canvas.width - 190, 60, 80, 40);
+    ctx.fillStyle = "black";
+    ctx.fillText("SAVE", canvas.width - 150, 85);
 
     // draw led field
     var topX = canvas.width / 2 - 55;

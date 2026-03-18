@@ -23,22 +23,8 @@ const GameState = {
     Pause: 5
 }
 
-// ### some declaration ###
-
-// holds the stone position
-var stonePos = [
-    [0, 0],
-    [0, 0],
-    [0, 0],
-    [0, 0],
-    [0, 0],
-    [0, 0],
-    [0, 0],
-    [0, 0]
-];
-
-// holds the field position
-var fieldPos = [
+// define the field position
+const fieldPos = [
     [490, 90],
     [655, 250],
     [650, 500],
